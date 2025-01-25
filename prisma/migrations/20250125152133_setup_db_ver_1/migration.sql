@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE "User" ALTER COLUMN "sex" SET DATA TYPE VARCHAR(6);
