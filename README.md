@@ -1,3 +1,6 @@
+$ Build docker command
+docker-compose up --build -d
+
 $ How to develop
 
 1. After pull from git move directory to server then
