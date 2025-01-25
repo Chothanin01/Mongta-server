@@ -1,0 +1,51 @@
+version: '3.8'
+
+services:
+  mongta:
+    image: postgres:16
+    container_name: postgres
+    environment:
+      POSTGRES_DB: mongta
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin123
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    restart: unless-stopped
+
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@admin.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+    ports:
+      - "5050:80"
+    depends_on:
+      - mongta
+    restart: unless-stopped
+
+  ai_api:
+    build:
+      context: ./ai-api
+    ports:
+      - "8000:8000"
+    container_name: ai
+    volumes:
+      - ../ai-api:/ai-api
+    command: ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "5000:5000"
+    container_name: server
+    environment:
+      NODE_ENV: production
+
+
+volumes:
+  postgres_data:
