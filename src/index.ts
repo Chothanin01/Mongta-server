@@ -1,12 +1,17 @@
-import express, { Request, Response } from "express";
+import express from 'express';
+import cors from 'cors';
+import { getNearbyHospitals } from './controller/HospitalController';
+
 
 const app = express();
-const PORT = process.env.PORT || 5000;
+app.use(cors());
 
-const appServer = app.listen(PORT , () => {
-  console.log(`Server is running on port ${PORT}`);
-})
+const PORT = process.env.PORT || 3000;
 
-app.get("/", (req: Request, res: Response) => {
-    res.send("Welco to the Node.js dsa");
-  });
+// ใช้ Controller ตรงในเส้นทาง
+app.get('/nearby-hospitals', getNearbyHospitals);
+
+// เริ่มต้นเซิร์ฟเวอร์
+app.listen(PORT, () => {
+  console.log(`Server is running on http://localhost:${PORT}`);
+});
