@@ -1,6 +1,7 @@
 import express, { Request, Response } from "express";
 import { Server } from "socket.io";
 import { chathistory, chatlog, createchat, sendchat } from "./controller/ChatController";
+import { getfile, uploadmiddleware, uploadtest } from "./controller/FirebaseController";
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -12,9 +13,11 @@ const appServer = app.listen(PORT , () => {
 app.use(express.json());
 
 app.post("/api/createchat", createchat)
-app.post("/api/sendchat", sendchat)
+app.post("/api/sendchat", uploadmiddleware, sendchat)
 app.get("/api/chat/:conversation_id/:user_id", chatlog)
 app.get("/api/chathistory/:user_id", chathistory)
+app.post("/api/upload", uploadmiddleware, uploadtest)
+app.get("/api/geturl" , getfile)
 
 //Declare socket.io
 export const io = new Server(appServer, {
