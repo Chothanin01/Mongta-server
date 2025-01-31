@@ -1,8 +1,12 @@
 import { Request, Response } from 'express';
 import axios from 'axios';
+import dotenv from 'dotenv';
 
-const GOOGLE_API_KEY = "AIzaSyBqCSDj6uncmfNSNQn2an_10WD2IRTpPZU";
+dotenv.config();
 
+const GOOGLE_API_KEY: string | undefined = process.env.GOOGLE_API_KEY;
+
+  // Set Point
 interface GooglePlacesResponse {
   status: string;
   results: {
@@ -28,14 +32,17 @@ interface Hospital {
 export const getNearbyHospitals = async (req: Request, res: Response): Promise<void> => {
   const { lat, lng } = req.query;
 
-  // ตรวจสอบว่า lat และ lng มีค่าหรือไม่
+  // Check Lat Lng
   if (!lat || !lng) {
-    res.status(400).json({ error: 'Missing required parameters: lat and lng' });
+    res.status(400).send({ 
+      success: false,
+      message: 'Missing required parameters: lat and lng' 
+    });
     return;
   }
 
   try {
-    // เรียก Google Places API
+    // Google Place Api
     const response = await axios.get<GooglePlacesResponse>(
       `https://maps.googleapis.com/maps/api/place/nearbysearch/json`,
       {
@@ -48,13 +55,16 @@ export const getNearbyHospitals = async (req: Request, res: Response): Promise<v
       }
     );
 
-    // ตรวจสอบสถานะผลลัพธ์
+    // Check status
     if (response.data.status === 'ZERO_RESULTS') {
-      res.status(404).json({ error: 'No nearby hospitals found' });
+      res.status(404).send({
+        success: false,
+        message: "No Nearest Hospitals Found."
+      });
       return;
     }
 
-    // ดึงข้อมูลเฉพาะโรงพยาบาล 3 แห่งแรก
+    // Select data Hospital
     const hospitals: Hospital[] = response.data.results.slice(0, 3).map((hospital) => ({
       name: hospital.name,
       address: hospital.vicinity,
@@ -64,8 +74,12 @@ export const getNearbyHospitals = async (req: Request, res: Response): Promise<v
 
     res.status(200).json(hospitals);
   } catch (error) {
-    console.error('Error fetching hospitals:', error);
-    res.status(500).json({ error: 'Failed to fetch nearby hospitals' });
+    console.log(error);
+      res.status(500).json({ 
+        error,
+        success: false,
+        message: "Eror finding Nearest Hospitals."
+    })
   }
 };
 
