@@ -1,6 +1,7 @@
 import express, { Request, Response } from "express";
 import { Server } from "socket.io";
 import { chathistory, chatlog, createchat, sendchat } from "./controller/ChatController";
+import { nearchart } from "./controller/NearChartController";
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -15,6 +16,7 @@ app.post("/api/createchat", createchat)
 app.post("/api/sendchat", sendchat)
 app.get("/api/chat/:conversation_id/:user_id", chatlog)
 app.get("/api/chathistory/:user_id", chathistory)
+app.post("/api/nearchart", nearchart)
 
 //Declare socket.io
 export const io = new Server(appServer, {
