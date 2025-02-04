@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import multer from 'multer';
-import { bucket } from '../util/bucket';
+import { bucket } from '../util/firebase';
 
 //Configure Multer for in-memory file storage
 const upload = multer({ storage: multer.memoryStorage() });

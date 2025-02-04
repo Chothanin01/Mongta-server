@@ -1,7 +1,7 @@
 import { Response,Request } from "express";
 import { prismadb } from "../lib/db";
 import { io } from '../index'
-import { bucket } from "../util/bucket";
+import { bucket } from "../util/firebase";
 import multer from "multer";
 
 export const createchat = async (req: Request, res: Response) =>  {

@@ -8,6 +8,7 @@ admin.initializeApp({
   storageBucket: 'gs://mongta-66831.firebasestorage.app',
 });
 
+const auth = admin.auth()
 const bucket = admin.storage().bucket();
 
-export { bucket };
+export { bucket, auth };
