@@ -8,10 +8,10 @@ app.use(cors());
 
 const PORT = process.env.PORT || 3000;
 
-// ใช้ Controller ตรงในเส้นทาง
+// Use Controller
 app.get('/nearby-hospitals', getNearbyHospitals);
 
-// เริ่มต้นเซิร์ฟเวอร์
+// Start Server
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
 });
