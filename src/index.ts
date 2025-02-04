@@ -1,13 +1,14 @@
 import express, { Request, Response } from "express";
 import { Server } from "socket.io";
 import { chathistory, chatlog, createchat, sendchat } from "./controller/ChatController";
+import cors from 'cors';
+import { getNearbyHospitals } from './controller/HospitalController';
+
 
 const app = express();
-const PORT = process.env.PORT || 5000;
+app.use(cors());
 
-const appServer = app.listen(PORT , () => {
-  console.log(`Server is running on port ${PORT}`);
-})
+const PORT = process.env.PORT || 3000;
 
 app.use(express.json());
 
@@ -15,9 +16,10 @@ app.post("/api/createchat", createchat)
 app.post("/api/sendchat", sendchat)
 app.get("/api/chat/:conversation_id/:user_id", chatlog)
 app.get("/api/chathistory/:user_id", chathistory)
+app.get('/nearby-hospitals', getNearbyHospitals);
 
 //Declare socket.io
-export const io = new Server(appServer, {
+export const io = new Server({
   cors: {
       origin: "http://localhost:3000"
   }
@@ -39,6 +41,7 @@ io.on('connection', (socket) => {
 });
 
 
-app.get("/", (req: Request, res: Response) => {
-  res.send("Welcome to the Node.ts");
-});
+// Start Server
+app.listen(PORT, () => {
+  console.log(`Server is running on http://localhost:${PORT}`);
+})
