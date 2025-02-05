@@ -61,3 +61,117 @@ export const login = async (req: Request, res: Response) => {
         })
     }
 }
+
+export const googlelogin = async (req: Request,res: Response) => {
+    try {
+        const { idtoken } = req.body
+
+        //Handle missing inputs
+        if (!idtoken) {
+            res.status(400).json({
+                success: false,
+                message: "Missing required inputs.",
+            })
+            return
+        }
+
+        const decodetoken = await auth.verifyIdToken(idtoken)
+        console.log(decodetoken);
+        
+        //Find user
+        const user = await prismadb.user.findFirst({
+            where: {
+                email: {
+                    path: ["email"],
+                    equals: decodetoken.email
+                }
+            }
+        })
+        //Already register
+        if (user) {
+            const token = await auth.createCustomToken(decodetoken.uid)
+            res.status(200).send({
+                isRegister: true,
+                token,
+                user,
+                success: true,
+                message: "Login with google success." 
+            })
+            return
+        }
+        //Not register
+        res.status(200).send({
+            isRegister: false,
+            google: {
+                email: decodetoken.email,
+                picture: decodetoken.picture,
+                uid: decodetoken.uid
+            }
+        })
+    } catch (error) {
+        //Response Error
+        console.log(error);
+        res.status(500).json({
+            error,
+            success: false,
+            message: "An error occurred."
+        })
+    }
+}
+
+//Same as googlelogin
+export const facebooklogin = async (req: Request,res: Response) => {
+    try {
+        const { idtoken } = req.body
+
+        //Handle missing inputs
+        if (!idtoken) {
+            res.status(400).json({
+                success: false,
+                message: "Missing required inputs.",
+            })
+            return
+        }
+
+        const decodetoken = await auth.verifyIdToken(idtoken)
+
+        //Find user
+        const user = await prismadb.user.findFirst({
+            where: {
+                email: {
+                    path: ["email"],
+                    equals: decodetoken.email
+                }
+            }
+        })
+        //Already register
+        if (user) {
+            const token = await auth.createCustomToken(decodetoken.uid)
+            res.status(200).send({
+                isRegister: true,
+                token,
+                user,
+                success: true,
+                message: "Login with google success." 
+            })
+            return
+        }
+        //Not register
+        res.status(200).send({
+            isRegister: false,
+            facebook: {
+                email: decodetoken.email,
+                picture: decodetoken.picture,
+                uid: decodetoken.uid
+            }
+        })
+    } catch (error) {
+        //Response Error
+        console.log(error);
+        res.status(500).json({
+            error,
+            success: false,
+            message: "An error occurred."
+        })
+    }
+}

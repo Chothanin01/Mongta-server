@@ -83,7 +83,7 @@ export const register = async(req: Request,res: Response) => {
                     status: 'active',
                     phone: phonejson,
                     email: emailjson,
-                    profile_picture: ""
+                    profile_picture: "https://firebasestorage.googleapis.com/v0/b/mongta-66831.firebasestorage.app/o/profile.jpg?alt=media&token=43c03659-4c2f-4212-8393-3238eacc403d"
                 }
             })
 
@@ -114,5 +114,189 @@ export const register = async(req: Request,res: Response) => {
             success: false,
             message: "An error occurred."
         })
+    }
+}
+
+
+export const googleregister = async (req: Request,res: Response) => {
+    try {
+        const { id_token, phonenumber, first_name, last_name, sex, dob } = req.body;
+        
+        //Handle missing inputs
+        if (!id_token || !phonenumber || !first_name || !last_name || !sex || !dob) {
+            res.status(400).json({
+                success: false,
+                message: "Missing required inputs."
+            })
+            return
+        }
+        //Decode token
+        const decodedToken = await auth.verifyIdToken(id_token);
+        const { email, picture } = decodedToken;
+
+        //Generate id
+        const id = (Date.now() + Math.random()) % 2147483647;
+
+        //Make phonenumber and email into json
+        const phonejson = {
+            "phonenumber": phonenumber,
+            "is_verified": false
+        };
+        const emailjson = {
+            "email": email,
+            "is_verified": true
+        };
+
+        //Handle exist user
+        const exist_user = await prismadb.user.findFirst({
+            where: {
+                OR: [
+                    {
+                        phone: {
+                            path: ["phonenumber"],
+                            equals: phonenumber
+                        }
+                    },
+                    {
+                        email: {
+                            path: ["email"],
+                            equals: email
+                        }
+                    }
+                ]
+            }
+        });
+        if (exist_user) {
+            res.status(404).json({
+                success: false,
+                message: "User already exists."
+            })
+            return
+        }
+
+        //Create user
+        const user = await prismadb.user.create({
+            data: {
+                id,
+                first_name,
+                last_name,
+                username: email?.split('@')[0] || '',
+                password: '',
+                sex,
+                date_of_birth: new Date(dob),
+                is_opthamologist: false,
+                status: 'active',
+                phone: phonejson,
+                email: emailjson,
+                profile_picture: picture || ""
+            }
+        });
+
+        //Response success
+        res.status(201).json({
+            user,
+            success: true,
+            message: "Created user successfully."
+        });
+    } catch (error) {
+        //Response Error
+        console.log(error);
+        res.status(500).json({
+            error,
+            success: false,
+            message: "An error occurred."
+        });
+    }
+}
+
+//Same as google register
+export const facebookregister = async (req: Request,res: Response) => {
+    try {
+        const { id_token, phonenumber, first_name, last_name, sex, dob } = req.body;
+        
+        //Handle missing inputs
+        if (!id_token || !phonenumber || !first_name || !last_name || !sex || !dob) {
+            res.status(400).json({
+                success: false,
+                message: "Missing required inputs."
+            })
+            return
+        }
+        //Decode token
+        const decodedToken = await auth.verifyIdToken(id_token);
+        const { email, picture } = decodedToken;
+
+        //Generate id
+        const id = (Date.now() + Math.random()) % 2147483647;
+
+        //Make phonenumber and email into json
+        const phonejson = {
+            "phonenumber": phonenumber,
+            "is_verified": false
+        };
+        const emailjson = {
+            "email": email,
+            "is_verified": true
+        };
+
+        //Handle exist user
+        const exist_user = await prismadb.user.findFirst({
+            where: {
+                OR: [
+                    {
+                        phone: {
+                            path: ["phonenumber"],
+                            equals: phonenumber
+                        }
+                    },
+                    {
+                        email: {
+                            path: ["email"],
+                            equals: email
+                        }
+                    }
+                ]
+            }
+        });
+        if (exist_user) {
+            res.status(404).json({
+                success: false,
+                message: "User already exists."
+            })
+            return
+        }
+
+        //Create user
+        const user = await prismadb.user.create({
+            data: {
+                id,
+                first_name,
+                last_name,
+                username: email?.split('@')[0] || '',
+                password: '',
+                sex,
+                date_of_birth: new Date(dob),
+                is_opthamologist: false,
+                status: 'active',
+                phone: phonejson,
+                email: emailjson,
+                profile_picture: picture || ""
+            }
+        });
+
+        //Response success
+        res.status(201).json({
+            user,
+            success: true,
+            message: "Created user successfully."
+        });
+    } catch (error) {
+        //Response Error
+        console.log(error);
+        res.status(500).json({
+            error,
+            success: false,
+            message: "An error occurred."
+        });
     }
 }

@@ -2,8 +2,8 @@ import express, { Request, Response } from "express";
 import { Server } from "socket.io";
 import { chathistory, chatlog, createchat, sendchat } from "./controller/ChatController";
 import { getfile, uploadmiddleware, uploadtest } from "./controller/FirebaseController";
-import { register } from "./controller/RegisterController";
-import { login } from "./controller/LoginController";
+import { facebookregister, googleregister, register } from "./controller/RegisterController";
+import { facebooklogin, googlelogin, login } from "./controller/LoginController";
 import { middleware } from "./controller/MiddlewareController";
 
 const app = express();
@@ -23,6 +23,10 @@ app.post("/api/upload", uploadmiddleware, middleware, uploadtest)
 app.get("/api/geturl" , middleware, getfile)
 app.post("/api/register", register)
 app.post("/api/login", login)
+app.post("/api/googlelogin", googlelogin)
+app.post("/api/facebooklogin", facebooklogin)
+app.post("/api/googleregister", googleregister)
+app.post("/api/facebookregister", facebookregister)
 
 //Declare socket.io
 export const io = new Server(appServer, {
