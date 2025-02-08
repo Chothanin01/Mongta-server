@@ -106,7 +106,8 @@ export const googlelogin = async (req: Request,res: Response) => {
                 email: decodetoken.email,
                 picture: decodetoken.picture,
                 uid: decodetoken.uid
-            }
+            },
+            idtoken
         })
     } catch (error) {
         //Response Error
@@ -163,7 +164,8 @@ export const facebooklogin = async (req: Request,res: Response) => {
                 email: decodetoken.email,
                 picture: decodetoken.picture,
                 uid: decodetoken.uid
-            }
+            },
+            idtoken
         })
     } catch (error) {
         //Response Error

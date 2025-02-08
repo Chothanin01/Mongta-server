@@ -5,7 +5,7 @@ import { prismadb } from "../lib/db";
 
 export const register = async(req: Request,res: Response) => {
     try {
-        const { username, password, phonenumber, email, first_name, last_name, sex, dob} = req.body
+        const { username, password, phonenumber, email, first_name, last_name, sex, dob } = req.body
         
         //Handle missing inputs
         if (!username || !password || !phonenumber || !email || !first_name || !last_name || !sex || !dob) {
@@ -132,7 +132,15 @@ export const googleregister = async (req: Request,res: Response) => {
         }
         //Decode token
         const decodedToken = await auth.verifyIdToken(id_token);
-        const { email, picture } = decodedToken;
+        const email = decodedToken.email
+        const picture = decodedToken.picture
+        if (!email || !picture) {
+            res.status(400).json({
+                success: false,
+                message: "Missing token value."
+            })
+            return
+        }
 
         //Generate id
         const id = (Date.now() + Math.random()) % 2147483647;
@@ -174,23 +182,45 @@ export const googleregister = async (req: Request,res: Response) => {
             return
         }
 
-        //Create user
-        const user = await prismadb.user.create({
-            data: {
-                id,
-                first_name,
-                last_name,
-                username: email?.split('@')[0] || '',
+        let user = {}
+        try {
+            //Create user in firebase
+            const user_firebase = await auth.createUser({
+                email,
                 password: '',
-                sex,
-                date_of_birth: new Date(dob),
-                is_opthamologist: false,
-                status: 'active',
-                phone: phonejson,
-                email: emailjson,
-                profile_picture: picture || ""
-            }
-        });
+                displayName: email?.split('@')[0] || ''
+            })
+            
+            //Create user in database
+            user = await prismadb.user.create({
+                data: {
+                    id,
+                    first_name,
+                    last_name,
+                    username: email?.split('@')[0] || '',
+                    password: '',
+                    sex,
+                    date_of_birth: new Date(dob),
+                    is_opthamologist: false,
+                    status: 'active',
+                    phone: phonejson,
+                    email: emailjson,
+                    profile_picture: "https://firebasestorage.googleapis.com/v0/b/mongta-66831.firebasestorage.app/o/profile.jpg?alt=media&token=43c03659-4c2f-4212-8393-3238eacc403d"
+                }
+            })
+
+        } catch (error) {
+            //Handle create user failed
+            console.log(error);
+            const del = await auth.getUserByEmail(email)
+            await auth.deleteUser(del.uid)
+            res.status(500).json({
+                error,
+                success: false,
+                message: "An error occurred while creating user."
+            })
+            return
+        }  
 
         //Response success
         res.status(201).json({
@@ -224,7 +254,15 @@ export const facebookregister = async (req: Request,res: Response) => {
         }
         //Decode token
         const decodedToken = await auth.verifyIdToken(id_token);
-        const { email, picture } = decodedToken;
+        const email = decodedToken.email
+        const picture = decodedToken.picture
+        if (!email || !picture) {
+            res.status(400).json({
+                success: false,
+                message: "Missing token value."
+            })
+            return
+        }
 
         //Generate id
         const id = (Date.now() + Math.random()) % 2147483647;
@@ -266,23 +304,45 @@ export const facebookregister = async (req: Request,res: Response) => {
             return
         }
 
-        //Create user
-        const user = await prismadb.user.create({
-            data: {
-                id,
-                first_name,
-                last_name,
-                username: email?.split('@')[0] || '',
+        let user = {}
+        try {
+            //Create user in firebase
+            const user_firebase = await auth.createUser({
+                email,
                 password: '',
-                sex,
-                date_of_birth: new Date(dob),
-                is_opthamologist: false,
-                status: 'active',
-                phone: phonejson,
-                email: emailjson,
-                profile_picture: picture || ""
-            }
-        });
+                displayName: email?.split('@')[0] || ''
+            })
+            
+            //Create user in database
+            user = await prismadb.user.create({
+                data: {
+                    id,
+                    first_name,
+                    last_name,
+                    username: email?.split('@')[0] || '',
+                    password: '',
+                    sex,
+                    date_of_birth: new Date(dob),
+                    is_opthamologist: false,
+                    status: 'active',
+                    phone: phonejson,
+                    email: emailjson,
+                    profile_picture: "https://firebasestorage.googleapis.com/v0/b/mongta-66831.firebasestorage.app/o/profile.jpg?alt=media&token=43c03659-4c2f-4212-8393-3238eacc403d"
+                }
+            })
+
+        } catch (error) {
+            //Handle create user failed
+            console.log(error);
+            const del = await auth.getUserByEmail(email)
+            await auth.deleteUser(del.uid)
+            res.status(500).json({
+                error,
+                success: false,
+                message: "An error occurred while creating user."
+            })
+            return
+        }  
 
         //Response success
         res.status(201).json({
