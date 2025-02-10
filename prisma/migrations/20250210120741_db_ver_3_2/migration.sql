@@ -1,0 +1,5 @@
+-- AlterTable
+ALTER TABLE "Scan" ALTER COLUMN "datetime" SET DATA TYPE DATE;
+
+-- AlterTable
+ALTER TABLE "User" ALTER COLUMN "password" SET DATA TYPE TEXT;

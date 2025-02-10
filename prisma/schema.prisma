@@ -30,7 +30,7 @@ model Conversation {
 model Scan {
   id          Int      @id @default(autoincrement())
   user_id     Int?
-  datetime    DateTime @db.Timestamp(6)
+  date    DateTime @db.Date
   description String?  @db.VarChar(255)
   va          Json?
   photo       Json?
@@ -42,7 +42,7 @@ model User {
   first_name                                         String         @db.VarChar(32)
   last_name                                          String         @db.VarChar(32)
   username                                           String         @unique @db.VarChar(32)
-  password                                           String         @db.VarChar(32)
+  password                                           String
   sex                                                String         @db.VarChar(6)
   date_of_birth                                      DateTime       @db.Date
   profile_picture                                    String
@@ -54,5 +54,4 @@ model User {
   Conversation_Conversation_ophthalmologist_idToUser Conversation[] @relation("Conversation_ophthalmologist_idToUser")
   Conversation_Conversation_user_idToUser            Conversation[] @relation("Conversation_user_idToUser")
   Scan                                               Scan[]
-
 }
