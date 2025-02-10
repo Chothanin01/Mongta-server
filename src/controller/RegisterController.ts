@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import { auth } from "../util/firebase";
 import { hashPassword } from "../util/bcrypt";
 import { prismadb } from "../lib/db";
+import { generateuserid } from "../util/id";
 
 export const register = async(req: Request,res: Response) => {
     try {
@@ -20,7 +21,7 @@ export const register = async(req: Request,res: Response) => {
         const hash = await hashPassword(password)
 
         //Generate id
-        const id = (Date.now() + Math.random()) % 2147483647;
+        const id = await generateuserid()
 
         //Make phonenumber and email into json
         const phonejson = {
@@ -143,7 +144,7 @@ export const googleregister = async (req: Request,res: Response) => {
         }
 
         //Generate id
-        const id = (Date.now() + Math.random()) % 2147483647;
+        const id = await generateuserid()
 
         //Make phonenumber and email into json
         const phonejson = {
@@ -265,7 +266,7 @@ export const facebookregister = async (req: Request,res: Response) => {
         }
 
         //Generate id
-        const id = (Date.now() + Math.random()) % 2147483647;
+        const id = await generateuserid()
 
         //Make phonenumber and email into json
         const phonejson = {
