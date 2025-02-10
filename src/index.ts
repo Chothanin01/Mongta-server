@@ -3,6 +3,7 @@ import { Server } from "socket.io";
 import { chathistory, chatlog, createchat, sendchat } from "./controller/ChatController";
 import cors from 'cors';
 import { getNearbyHospitals } from './controller/HospitalController';
+import { scanlog } from "./controller/ScanLogController";
 
 
 const app = express();
@@ -16,7 +17,8 @@ app.post("/api/createchat", createchat)
 app.post("/api/sendchat", sendchat)
 app.get("/api/chat/:conversation_id/:user_id", chatlog)
 app.get("/api/chathistory/:user_id", chathistory)
-app.get('/nearby-hospitals', getNearbyHospitals);
+app.get('/nearby-hospitals', getNearbyHospitals)
+app.get('/api/scanlog/:user_id' , scanlog)
 
 //Declare socket.io
 export const io = new Server({
