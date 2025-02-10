@@ -1,6 +1,8 @@
 import { Response,Request } from "express";
 import { prismadb } from "../lib/db";
 import { io } from '../index'
+import { bucket } from "../util/bucket";
+import multer from "multer";
 
 export const createchat = async (req: Request, res: Response) =>  {
     try {
@@ -78,6 +80,7 @@ export const createchat = async (req: Request, res: Response) =>  {
         //Response success
         res.status(201).send({
             create,
+            success: true,
             message: "Chat created successfully."
         })
 
@@ -92,17 +95,29 @@ export const createchat = async (req: Request, res: Response) =>  {
     }
 }
 
+const upload = multer({ storage: multer.memoryStorage() });
+
 export const sendchat = async (req:Request, res:Response) => {
     try {
-        const { conversation_id, sender_id, message} = req.body
+        let { conversation_id, sender_id, message} = req.body
+        
+        conversation_id = parseInt(conversation_id)
+        sender_id = parseInt(sender_id)
 
         //Handle missing inputs.
-        if (!conversation_id || !sender_id || !message) {
+        if (!conversation_id || !sender_id || (!message && !req.file)) {
             res.status(400).json({
                 success: false,
-                message: "Missing required inputs."
+                message: "Missing required inputs.",
             })
             return
+        }
+
+        if (req.file && message) {
+            res.status(404).send({
+                success: false,
+                message: "Can't send message and image together."
+            })
         }
 
         //Handle chat not create and sender not in this chat
@@ -128,8 +143,64 @@ export const sendchat = async (req:Request, res:Response) => {
         const timeZoneOffset = 7 * 60
         const timestamp = new Date(now.getTime() + timeZoneOffset * 60000)
         
+        let send = {}
+        if (req.file) {
+
+            //Convert the stream operations to a Promise
+            const uploadFile = () => {
+                return new Promise<string>((resolve, reject) => {
+                    const filename = `chat/${conversation_id}/${Date.now()}-${req.file!.originalname}`
+                    const file = bucket.file(filename)
+                    const stream = file.createWriteStream({
+                        metadata: { contentType: req.file!.mimetype },
+                        resumable: false
+                    });
+
+                    stream.on('error', (err) => {
+                        reject(err);
+                    });
+
+                    stream.on('finish', async () => {
+                        try {
+                            //Make the file public
+                            await file.makePublic();
+                            
+                            //Get the public URL
+                            const fileurl = `https://storage.googleapis.com/${bucket.name}/${filename}`;
+                            resolve(fileurl);
+                        } catch (err) {
+                            reject(err);
+                        }
+                    });
+
+                    stream.end(req.file!.buffer);
+                });
+            };
+
+            try {
+                //Wait for file upload
+                const fileurl = await uploadFile();
+                
+                //Save message with file URL
+                send = await prismadb.chat.create({
+                    data: {
+                        sender_id,
+                        conversation_id,
+                        status: 'delivered',
+                        timestamp,
+                        chat: fileurl,
+                    }
+                });
+            } catch (err) {
+                res.status(500).json({
+                    success: false,
+                    message: 'Failed to upload the image.'
+                });
+                return
+            }
+    } else {
         //Save message
-        const send = await prismadb.chat.create({
+        send = await prismadb.chat.create({
             data: {
                 sender_id,
                 conversation_id,
@@ -138,6 +209,7 @@ export const sendchat = async (req:Request, res:Response) => {
                 chat: message
             }
         })
+    }
 
         //Send message
         io.to(conversation_id).emit('newMessage', {
@@ -149,9 +221,9 @@ export const sendchat = async (req:Request, res:Response) => {
         //Response success
         res.status(201).send({
             send,
+            success: true,
             message: "Message sent successfully."
         })
-
     } catch (error) {
         //Response Error
         console.log(error);
@@ -218,7 +290,7 @@ export const chatlog = async (req:Request, res:Response) => {
         })
 
     } catch (error) {
-        //Response error
+        //Response Error
         console.log(error);
         res.status(400).json({
             error,
@@ -398,7 +470,7 @@ export const chathistory = async (req:Request, res:Response) => {
             message: "Chat history sent successfully.",
         })
     } catch (error) {
-        //Response error
+        //Response Error
         console.log(error)
         res.status(400).json({
             error,
