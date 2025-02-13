@@ -68,6 +68,9 @@ export const googlelogin = async (req: Request,res: Response) => {
     try {
         const { idtoken } = req.body
 
+        // inspect received idtoken
+        console.log('Received Google ID Token:', idtoken);
+
         //Handle missing inputs
         if (!idtoken) {
             res.status(400).json({

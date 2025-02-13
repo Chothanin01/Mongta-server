@@ -1,4 +1,5 @@
 import express, { Request, Response } from "express";
+import cors from "cors";
 import { Server } from "socket.io";
 import { chathistory, chatlog, createchat, sendchat } from "./controller/ChatController";
 import { getfile, uploadmiddleware, uploadtest } from "./controller/FirebaseController";
@@ -8,6 +9,23 @@ import { middleware } from "./controller/MiddlewareController";
 
 const app = express();
 const PORT = process.env.PORT || 5000;
+
+// Dynamic CORS configuration
+const allowedOrigins = process.env.NODE_ENV === 'production' 
+  ? ['https://mongta-66831.firebaseapp.com'] 
+  : ['http://localhost:3000', 'http://10.0.2.2:3000','http://localhost:56899'];
+
+app.use(cors({
+  origin: (origin, callback) => {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'), false);
+    }
+  },
+  methods: ['GET', 'POST'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
 
 const appServer = app.listen(PORT , () => {
   console.log(`Server is running on port ${PORT}`);
