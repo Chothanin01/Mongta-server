@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { prismadb } from "../lib/db";
+import { prismadb } from "../util/db";
 import { comparePassword } from "../util/bcrypt";
 import { auth } from "../util/firebase";
 import { client } from "../util/OAUTH";

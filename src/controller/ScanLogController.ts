@@ -1,6 +1,6 @@
 import { Response, Request } from "express";
 import { prismadb } from "../util/db";
-import { bucket } from "../util/bucket";
+import { bucket } from "../util/firebase";
 import { generatescanid } from "../util/id";
 
 export const scanlog = async (req: Request,res: Response) => {

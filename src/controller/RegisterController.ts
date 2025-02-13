@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import { auth } from "../util/firebase";
 import { hashPassword } from "../util/bcrypt";
-import { prismadb } from "../lib/db";
+import { prismadb } from "../util/db";
 import { generateuserid } from "../util/id";
 
 export const register = async(req: Request,res: Response) => {
