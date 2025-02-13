@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import { auth } from "../util/firebase";
-import { prismadb } from "../lib/db";
+import { prismadb } from "../util/db";
 
 export const middleware = async (req: Request,res: Response) => {
     try {
