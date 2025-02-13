@@ -6,10 +6,13 @@ import { getfile, uploadmiddleware, uploadtest } from "./controller/FirebaseCont
 import { facebookregister, googleregister, register } from "./controller/RegisterController";
 import { facebooklogin, googlelogin, login } from "./controller/LoginController";
 import { middleware } from "./controller/MiddlewareController";
+import { getNearbyHospitals } from './controller/HospitalController';
+import { searchHospitals } from './controller/HospitalSearch';
+
 
 const app = express();
+app.use(cors());
 const PORT = process.env.PORT || 5000;
-
 // Dynamic CORS configuration
 const allowedOrigins = process.env.NODE_ENV === 'production' 
   ? ['https://mongta-66831.firebaseapp.com'] 
@@ -45,6 +48,8 @@ app.post("/api/googlelogin", googlelogin)
 app.post("/api/facebooklogin", facebooklogin)
 app.post("/api/googleregister", googleregister)
 app.post("/api/facebookregister", facebookregister)
+app.get('/nearby-hospitals', getNearbyHospitals);
+app.get('/search-hospitals', searchHospitals);
 
 //Declare socket.io
 export const io = new Server(appServer, {
@@ -66,9 +71,4 @@ io.on('connection', (socket) => {
           socket.to(conversation_id).emit('newMessage', messageData);
       });
   });
-});
-
-
-app.get("/", (req: Request, res: Response) => {
-  res.send("Welcome to the Node.ts");
 });
