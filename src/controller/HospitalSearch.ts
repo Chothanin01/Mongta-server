@@ -36,11 +36,10 @@ interface Hospital {
   rating: number | string;
 }
 
-// ฟังก์ชันค้นหาตามชื่อโรงพยาบาล
+// Search Hospital
 export const searchHospitals = async (req: Request, res: Response): Promise<void> => {
   const { query } = req.query;
 
-  // ถ้าไม่มีคำค้นหา ให้ใช้การค้นหาจากตำแหน่ง
   if (!query) {
     res.status(400).send({
       success: false,
@@ -50,7 +49,7 @@ export const searchHospitals = async (req: Request, res: Response): Promise<void
   }
 
   try {
-    // ค้นหาผ่าน Google Places API
+    // Search Google Places API
     const response = await axios.get<GooglePlacesResponse>(
       `https://maps.googleapis.com/maps/api/place/textsearch/json`,
       {
@@ -61,7 +60,6 @@ export const searchHospitals = async (req: Request, res: Response): Promise<void
       }
     );
 
-    // หากไม่มีผลลัพธ์จากการค้นหา
     if (response.data.status === 'ZERO_RESULTS') {
       res.status(404).send({
         success: false,
@@ -70,12 +68,11 @@ export const searchHospitals = async (req: Request, res: Response): Promise<void
       return;
     }
 
-    // Map ข้อมูลที่ได้จาก Google API
+    // Data Map for Google API
     const hospitals: Hospital[] = await Promise.all(
       response.data.results.map(async (hospital) => {
         let address = hospital.vicinity || 'Address not available';
 
-        // หากไม่มี address, ใช้ reverse geocoding เพื่อหาที่อยู่
         if (!hospital.vicinity) {
           try {
             const geocodingResponse = await axios.get<GeocodingResponse>(
@@ -103,7 +100,7 @@ export const searchHospitals = async (req: Request, res: Response): Promise<void
       })
     );
 
-    // ส่งข้อมูลกลับไปยัง Frontend
+    //Respone to Front-end
     res.status(200).json(hospitals);
   } catch (error) {
     console.log(error);
