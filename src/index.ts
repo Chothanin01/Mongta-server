@@ -6,9 +6,9 @@ import { getfile, uploadmiddleware, uploadtest } from "./controller/FirebaseCont
 import { facebookregister, googleregister, register } from "./controller/RegisterController";
 import { facebooklogin, googlelogin, login } from "./controller/LoginController";
 import { middleware } from "./controller/MiddlewareController";
+import { nearchart } from "./controller/NearChartController";
 import { getNearbyHospitals } from './controller/HospitalController';
 import { searchHospitals } from './controller/HospitalSearch';
-
 
 const app = express();
 app.use(cors());
@@ -50,9 +50,11 @@ app.post("/api/googleregister", googleregister)
 app.post("/api/facebookregister", facebookregister)
 app.get('/nearby-hospitals', getNearbyHospitals);
 app.get('/search-hospitals', searchHospitals);
+app.post("/api/nearchart", nearchart)
+
 
 //Declare socket.io
-export const io = new Server(appServer, {
+export const io = new Server({
   cors: {
       origin: "http://localhost:3000"
   }

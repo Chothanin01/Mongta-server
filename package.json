@@ -21,14 +21,7 @@
     "bcrypt": "^5.1.1",
     "cors": "^2.8.5",
     "dotenv": "^16.4.7",
-    "express": "^4.21.2",
-    "firebase-admin": "^13.0.2",
-    "google-auth-library": "^9.15.1",
-    "jsonwebtoken": "^9.0.2",
-    "multer": "^1.4.5-lts.1",
-    "prisma": "^6.2.1",
-    "socket.io": "^4.8.1",
-    "uuid": "^11.0.5"
+    "express": "^4.21.2"
   },
   "devDependencies": {
     "@types/axios": "^0.9.36",
