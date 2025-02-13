@@ -2,13 +2,14 @@ import express, { Request, Response } from "express";
 import cors from "cors";
 import { Server } from "socket.io";
 import { chathistory, chatlog, createchat, sendchat } from "./controller/ChatController";
-import { getfile, uploadmiddleware, uploadtest } from "./controller/FirebaseController";
 import { facebookregister, googleregister, register } from "./controller/RegisterController";
 import { facebooklogin, googlelogin, login } from "./controller/LoginController";
 import { middleware } from "./controller/MiddlewareController";
 import { nearchart } from "./controller/NearChartController";
 import { getNearbyHospitals } from './controller/HospitalController';
 import { searchHospitals } from './controller/HospitalSearch';
+import { ophtha_scanlog, savescanlog, scanlog } from "./controller/ScanLogController";
+import { getfile, multipleupload, uploadmiddleware, uploadtest } from "./controller/FirebaseController";
 
 const app = express();
 app.use(cors());
@@ -40,8 +41,6 @@ app.post("/api/createchat", middleware, createchat)
 app.post("/api/sendchat", uploadmiddleware, middleware, sendchat)
 app.get("/api/chat/:conversation_id/:user_id", middleware, chatlog)
 app.get("/api/chathistory/:user_id", middleware, chathistory)
-app.post("/api/upload", uploadmiddleware, middleware, uploadtest)
-app.get("/api/geturl" , middleware, getfile)
 app.post("/api/register", register)
 app.post("/api/login", login)
 app.post("/api/googlelogin", googlelogin)
@@ -51,7 +50,11 @@ app.post("/api/facebookregister", facebookregister)
 app.get('/nearby-hospitals', getNearbyHospitals);
 app.get('/search-hospitals', searchHospitals);
 app.post("/api/nearchart", nearchart)
-
+app.get("/api/scanlog/:user_id" , scanlog)
+app.post("/api/savescanlog", multipleupload, savescanlog)
+app.get("/api/scanlog/ophtha/:conversation_id", ophtha_scanlog)
+app.post("/api/upload", uploadmiddleware, uploadtest)
+app.get("/api/geturl" , getfile)
 
 //Declare socket.io
 export const io = new Server({

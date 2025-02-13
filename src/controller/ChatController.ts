@@ -1,8 +1,9 @@
 import { Response,Request } from "express";
-import { prismadb } from "../lib/db";
+import { prismadb } from "../util/db";
 import { io } from '../index'
 import { bucket } from "../util/firebase";
 import multer from "multer";
+import { generatechatid } from "../util/id";
 
 export const createchat = async (req: Request, res: Response) =>  {
     try {
@@ -66,9 +67,13 @@ export const createchat = async (req: Request, res: Response) =>  {
             return
         }
 
+        //Generate chat id
+        const id = await generatechatid()
+
         //Create chat
         const create = await prismadb.conversation.create({
             data: {
+                id,
                 user_id,
                 ophthalmologist_id:ophthaid
             }
