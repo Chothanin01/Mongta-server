@@ -2,7 +2,7 @@ import { Request, Response } from "express";
 import { prismadb } from "../lib/db";
 import { comparePassword } from "../util/bcrypt";
 import { auth } from "../util/firebase";
-import { client, google_client } from "../util/OAUTH";
+import { client } from "../util/OAUTH";
 import axios from "axios";
 
 export const login = async (req: Request, res: Response) => {
@@ -80,7 +80,7 @@ export const googlelogin = async (req: Request,res: Response) => {
         //Verify the Google token
         const ticket = await client.verifyIdToken({
             idToken: idtoken,
-            audience: google_client.length === 1 ? google_client[0] : google_client
+            audience: process.env.GOOGLE_CLIENT_ID_ANDRIOD
         })
 
         const payload = ticket.getPayload();
