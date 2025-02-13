@@ -3,7 +3,14 @@ import { Request, Response } from "express";
 export const nearchart = async (req: Request,res: Response) => {
     try {
         const { near1, near2, near3, near4 } = req.body
-        
+        //Handle invalid inputs types
+        if (typeof near1 !== "number" || typeof near2 !== "number" || typeof near3  !== "number" || typeof(near4) !== "number") {
+            res.status(404).json({
+                success: false,
+                message: "Invalid inputs types."
+            })
+        }
+
         //Handle missing inputs and inputs out of range 
         if (!near1 || !near2 || !near3 || !near4) {
             res.status(404).json({
