@@ -1,0 +1,17 @@
+$ Insert script for 7 user and 3 ophthamologist 
+(Only for develop Chat function)
+
+INSERT INTO public."User"(
+    id, first_name, last_name, username, password, sex, date_of_birth, profile_picture, is_opthamologist, status, phone, email
+)
+VALUES
+    (1, 'John', 'Doe', 'johndoe', 'password123', 'Male', '1990-01-15', 'profile1.jpg', true, 'Active', '{"mobile":"1234567890"}', '{"personal":"john.doe@example.com"}'),
+    (2, 'Jane', 'Smith', 'janesmith', 'password123', 'Female', '1985-05-22', 'profile2.jpg', true, 'Active', '{"mobile":"1234567891"}', '{"personal":"jane.smith@example.com"}'),
+    (3, 'Emily', 'Johnson', 'emilyj', 'password123', 'Female', '1992-03-10', 'profile3.jpg', true, 'Active', '{"mobile":"1234567892"}', '{"personal":"emily.johnson@example.com"}'),
+    (4, 'Michael', 'Brown', 'michaelb', 'password123', 'Male', '1988-07-30', 'profile4.jpg', false, 'Active', '{"mobile":"1234567893"}', '{"personal":"michael.brown@example.com"}'),
+    (5, 'Sarah', 'Davis', 'sarahd', 'password123', 'Female', '1995-09-12', 'profile5.jpg', false, 'Active', '{"mobile":"1234567894"}', '{"personal":"sarah.davis@example.com"}'),
+    (6, 'David', 'Wilson', 'davidw', 'password123', 'Male', '1993-11-25', 'profile6.jpg', false, 'Active', '{"mobile":"1234567895"}', '{"personal":"david.wilson@example.com"}'),
+    (7, 'Laura', 'Miller', 'lauram', 'password123', 'Female', '1990-06-18', 'profile7.jpg', false, 'Active', '{"mobile":"1234567896"}', '{"personal":"laura.miller@example.com"}'),
+    (8, 'James', 'Moore', 'jamesm', 'password123', 'Male', '1997-02-14', 'profile8.jpg', false, 'Active', '{"mobile":"1234567897"}', '{"personal":"james.moore@example.com"}'),
+    (9, 'Anna', 'Taylor', 'annat', 'password123', 'Female', '1991-10-05', 'profile9.jpg', false, 'Active', '{"mobile":"1234567898"}', '{"personal":"anna.taylor@example.com"}'),
+    (10, 'Robert', 'Anderson', 'roberta', 'password123', 'Male', '1986-12-20', 'profile10.jpg', false, 'Active', '{"mobile":"1234567899"}', '{"personal":"robert.anderson@example.com"}');
