@@ -1,4 +1,4 @@
-import { prismadb } from "../lib/db";
+import { prismadb } from "./db";
 
 export async function generateuserid(): Promise<number> {
     while (true) {

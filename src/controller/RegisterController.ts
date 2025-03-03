@@ -1,15 +1,16 @@
 import { Request, Response } from "express";
 import { auth } from "../util/firebase";
 import { hashPassword } from "../util/bcrypt";
-import { prismadb } from "../lib/db";
+import { prismadb } from "../util/db";
 import { generateuserid } from "../util/id";
+import { verifyOTP } from "../util/OTP";
 
 export const register = async(req: Request,res: Response) => {
     try {
-        const { username, password, phonenumber, email, first_name, last_name, sex, dob } = req.body
+        const { otp, otp_ref, username, password, phonenumber, email, first_name, last_name, sex, dob , method} = req.body
         
         //Handle missing inputs
-        if (!username || !password || !phonenumber || !email || !first_name || !last_name || !sex || !dob) {
+        if (!otp || !otp_ref || !username || !password || !phonenumber || !email || !first_name || !last_name || !sex || !dob || !method) {
             res.status(400).json({
                 success: false,
                 message: "Missing required inputs.",
@@ -17,21 +18,49 @@ export const register = async(req: Request,res: Response) => {
             return
         }
 
+        //Make phonenumber and email into json
+        let phonejson = {
+            "phonenumber": phonenumber,
+            "is_verified": false
+        }
+        let emailjson = {
+            "email": email,
+            "is_verified": false
+        }
+
+        //Verify OTP
+        if (method === 'email') {
+            const verify = await verifyOTP(otp_ref, otp, email)
+            if (verify !== "OTP verified.") {
+                res.status(400).json({
+                    success: false,
+                    message: verify
+                })
+                return
+            }
+            emailjson = {
+                "email": email,
+                "is_verified": true
+            }
+        } else if (method === 'phone') { 
+            const verify = await verifyOTP(otp_ref, otp, phonenumber)
+            if (verify !== "OTP verified.") {
+                res.status(400).json({
+                    success: false,
+                    message: verify
+                })
+                return
+            }
+            phonejson = {
+                "phonenumber": phonenumber,
+                "is_verified": true
+            }
+        }
         //Hash password
         const hash = await hashPassword(password)
 
         //Generate id
         const id = await generateuserid()
-
-        //Make phonenumber and email into json
-        const phonejson = {
-            "phonenumber": phonenumber,
-            "is_verified": false
-        }
-        const emailjson = {
-            "email": email,
-            "is_verified": false
-        }
 
         //Handle exist user
         const exist_user = await prismadb.user.findFirst({

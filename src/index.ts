@@ -6,6 +6,7 @@ import { getfile, uploadmiddleware, uploadtest } from "./controller/FirebaseCont
 import { facebookregister, googleregister, register } from "./controller/RegisterController";
 import { facebooklogin, googlelogin, login } from "./controller/LoginController";
 import { middleware } from "./controller/MiddlewareController";
+import { OTP_email, OTP_phone } from "./controller/OTPController";
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -45,6 +46,8 @@ app.post("/api/googlelogin", googlelogin)
 app.post("/api/facebooklogin", facebooklogin)
 app.post("/api/googleregister", googleregister)
 app.post("/api/facebookregister", facebookregister)
+app.post("/api/otp/mail", OTP_email)
+app.post("/api/otp/phone", OTP_phone)
 
 //Declare socket.io
 export const io = new Server(appServer, {
@@ -66,9 +69,4 @@ io.on('connection', (socket) => {
           socket.to(conversation_id).emit('newMessage', messageData);
       });
   });
-});
-
-
-app.get("/", (req: Request, res: Response) => {
-  res.send("Welcome to the Node.ts");
 });

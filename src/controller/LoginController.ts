@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { prismadb } from "../lib/db";
+import { prismadb } from "../util/db";
 import { comparePassword } from "../util/bcrypt";
 import { auth } from "../util/firebase";
 import { client } from "../util/OAUTH";
@@ -138,6 +138,12 @@ export const googlelogin = async (req: Request,res: Response) => {
 }
 
 export const facebooklogin = async (req: Request,res: Response) => {
+    interface FacebookUser {
+        facebookId: string;
+        email?: string; // Email may not always be available
+        name: string;
+        picture?: { data: { url: string } }; // Picture might be an object
+    }
     try {
         const { accesstoken } = req.body
 
@@ -153,9 +159,9 @@ export const facebooklogin = async (req: Request,res: Response) => {
         //Verify the Facebook token
         const fbResponse = await axios.get(
             `https://graph.facebook.com/me?fields=id,name,email,picture&access_token=${accesstoken}`
-        );
+        )
 
-        const { facebookId, email, name, picture } = fbResponse.data
+        const { facebookId, email, name, picture } = fbResponse.data as FacebookUser
         if (!email) {
             res.status(400).json({
                 success: false,

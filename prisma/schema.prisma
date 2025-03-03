@@ -30,10 +30,10 @@ model Conversation {
 model Scan {
   id          Int      @id @default(autoincrement())
   user_id     Int?
-  datetime    DateTime @db.Timestamp(6)
   description String?  @db.VarChar(255)
   va          Json?
   photo       Json?
+  date        DateTime @db.Date
   User        User?    @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 }
 
@@ -54,4 +54,12 @@ model User {
   Conversation_Conversation_ophthalmologist_idToUser Conversation[] @relation("Conversation_ophthalmologist_idToUser")
   Conversation_Conversation_user_idToUser            Conversation[] @relation("Conversation_user_idToUser")
   Scan                                               Scan[]
+}
+
+model OTP {
+  Ref        String   @id @db.VarChar(6)
+  OTP        String   @db.VarChar(6)
+  create_at  DateTime @db.Timestamp(6)
+  expires_at DateTime @db.Timestamp(6)
+  phone_mail String
 }
