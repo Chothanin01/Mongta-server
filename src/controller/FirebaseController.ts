@@ -7,6 +7,13 @@ const upload = multer({ storage: multer.memoryStorage() });
 //Initialize Firebase Admin SDK 
 export const uploadmiddleware = upload.single('file');
 
+export const aiupload = multer({
+  storage: multer.memoryStorage(),
+}).fields([
+  { name: 'right_eye', maxCount: 1 },
+  { name: 'left_eye', maxCount: 1 }
+]);
+
 export const multipleupload = multer({
   storage: multer.memoryStorage(),
 }).fields([

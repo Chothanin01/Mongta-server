@@ -2,6 +2,8 @@ import { Response, Request } from "express";
 import { prismadb } from "../util/db";
 import { bucket } from "../util/bucket";
 import { generatescanid } from "../util/id";
+import FormData from 'form-data';
+import fetch from 'node-fetch';
 
 export const scanlog = async (req: Request,res: Response) => {
     try {
@@ -95,8 +97,76 @@ export const ophtha_scanlog = async (req: Request, res:Response) => {
 
 export const savescanlog = async (req: Request,res: Response) => {
     try {
+        const { user_id, line_right, line_left, va_right, va_left, near_description } = req.body
         const files = req.files as { [fieldname: string]: Express.Multer.File[] }
-        const { user_id, description, line_right, line_left, va_right, va_left, near_description, pic_description } = req.body
+        
+        //Handle missing inputs
+        if (!user_id || !line_right || !line_left || !va_right || !va_left || !near_description) {
+            res.status(400).send({
+                success: false,
+                message: "Missing required inputs."
+            })
+            return
+        }
+        if (!files || !files.right_eye || !files.left_eye) {
+            res.status(400).send({
+                success: false,
+                message: "Missing required photo."
+            })
+            return
+        }
+        let ai_analysis
+        try {
+            const formData = new FormData();
+            formData.append('right_eye', files.left_eye[0].buffer, files.left_eye[0].originalname)
+            formData.append('left_eye', files.left_eye[0].buffer, files.left_eye[0].originalname)
+            formData.append('user_id', user_id)
+            formData.append('line_right', line_right)
+            formData.append('line_left', line_left)
+            formData.append('va_right', va_right)
+            formData.append('va_left', va_left)
+            formData.append('near_description', near_description)
+            
+            const ai = await fetch('ai....', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    ...formData.getHeaders()
+                }
+            })
+
+            if (!ai.ok) {
+                res.status(400).send({
+                    success: false,
+                    message: "An unexpected error occurred while fetching data from AI."
+                })
+                return
+            }
+            
+            ai_analysis = await ai.json();
+        } catch (error) {
+            //Response error
+            console.log(error);
+            res.status(400).json({
+                error,
+                success: false,
+                message: "An unexpected error occurred."
+            })
+            return
+            
+        }
+        let aiRightBuffer, aiLeftBuffer;
+    
+        if (ai_analysis.ai_right_image_base64) {
+            aiRightBuffer = Buffer.from(ai_analysis.ai_right_image_base64, 'base64');
+        }
+        
+        if (ai_analysis.ai_left_image_base64) {
+            aiLeftBuffer = Buffer.from(ai_analysis.ai_left_image_base64, 'base64');
+        }
+
+        const description = ai_analysis.description
+        const pic_description = ai_analysis.pic_description
 
         //Handle missing inputs
         if (!user_id || !description || 

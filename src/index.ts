@@ -5,7 +5,7 @@ import cors from 'cors';
 import { getNearbyHospitals } from './controller/HospitalController';
 import { ophtha_scanlog, savescanlog, scanlog } from "./controller/ScanLogController";
 
-import { getfile, multipleupload, uploadmiddleware, uploadtest } from "./controller/FirebaseController";
+import { aiupload, getfile, multipleupload, uploadmiddleware, uploadtest } from "./controller/FirebaseController";
 
 const app = express();
 app.use(cors());
@@ -20,7 +20,7 @@ app.get("/api/chat/:conversation_id/:user_id", chatlog)
 app.get("/api/chathistory/:user_id", chathistory)
 app.get("/nearby-hospitals", getNearbyHospitals)
 app.get("/api/scanlog/:user_id" , scanlog)
-app.post("/api/savescanlog", multipleupload, savescanlog)
+app.post("/api/savescanlog", aiupload, multipleupload, savescanlog)
 app.get("/api/scanlog/ophtha/:conversation_id", ophtha_scanlog)
 app.post("/api/upload", uploadmiddleware, uploadtest)
 app.get("/api/geturl" , getfile)
