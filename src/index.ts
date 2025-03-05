@@ -1,9 +1,9 @@
 import express, { Request, Response } from "express";
 import { Server } from "socket.io";
 import { chathistory, chatlog, createchat, sendchat } from "./controller/ChatController";
+import { nearchart } from "./controller/NearChartController";
 import cors from 'cors';
 import { getNearbyHospitals } from './controller/HospitalController';
-
 
 const app = express();
 app.use(cors());
@@ -16,6 +16,7 @@ app.post("/api/createchat", createchat)
 app.post("/api/sendchat", sendchat)
 app.get("/api/chat/:conversation_id/:user_id", chatlog)
 app.get("/api/chathistory/:user_id", chathistory)
+app.post("/api/nearchart", nearchart)
 app.get('/nearby-hospitals', getNearbyHospitals);
 
 //Declare socket.io
