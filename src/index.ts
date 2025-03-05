@@ -1,7 +1,7 @@
 import express, { Request, Response } from "express";
 import cors from "cors";
 import { Server } from "socket.io";
-import { chathistory, chatlog, createchat, sendchat } from "./controller/ChatController";
+import { chathistory, chatlog, findophth, sendchat } from "./controller/ChatController";
 import { facebookregister, googleregister, register } from "./controller/RegisterController";
 import { facebooklogin, googlelogin, login } from "./controller/LoginController";
 import { middleware } from "./controller/MiddlewareController";
@@ -37,7 +37,7 @@ const appServer = app.listen(PORT , () => {
 
 app.use(express.json());
 
-app.post("/api/createchat", middleware, createchat)
+app.post("/api/findophth", middleware, findophth)
 app.post("/api/sendchat", uploadmiddleware, middleware, sendchat)
 app.get("/api/chat/:conversation_id/:user_id", middleware, chatlog)
 app.get("/api/chathistory/:user_id", middleware, chathistory)
