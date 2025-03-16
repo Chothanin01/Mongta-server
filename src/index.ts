@@ -12,7 +12,8 @@ app.use(cors());
 
 const PORT = process.env.PORT || 3000;
 
-app.use(express.json());
+app.use(express.json({ limit: "50mb" }));
+app.use(express.urlencoded({ extended: true, limit: "50mb" }));
 
 app.post("/api/createchat", createchat)
 app.post("/api/sendchat", uploadmiddleware, sendchat)
@@ -20,7 +21,7 @@ app.get("/api/chat/:conversation_id/:user_id", chatlog)
 app.get("/api/chathistory/:user_id", chathistory)
 app.get("/nearby-hospitals", getNearbyHospitals)
 app.get("/api/scanlog/:user_id" , scanlog)
-app.post("/api/savescanlog", aiupload, multipleupload, savescanlog)
+app.post("/api/savescanlog", multipleupload, savescanlog)
 app.get("/api/scanlog/ophtha/:conversation_id", ophtha_scanlog)
 app.post("/api/upload", uploadmiddleware, uploadtest)
 app.get("/api/geturl" , getfile)
