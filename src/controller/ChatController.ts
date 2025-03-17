@@ -122,6 +122,7 @@ export const sendchat = async (req:Request, res:Response) => {
                 success: false,
                 message: "Can't send message and image together."
             })
+            return
         }
 
         //Handle chat not create and sender not in this chat
@@ -244,9 +245,9 @@ export const chatlog = async (req:Request, res:Response) => {
         const { conversation_id, user_id } = req.params
 
         //Handle chat not exist
-        const check_chat = await prismadb.chat.findMany({
+        const check_chat = await prismadb.conversation.findMany({
             where: {
-                conversation_id:parseInt(conversation_id)
+                id:parseInt(conversation_id)
             }
         })
         if (check_chat.length <= 0) {
@@ -269,6 +270,50 @@ export const chatlog = async (req:Request, res:Response) => {
             }
         })
 
+        const user = await prismadb.conversation.findMany({
+            where: {
+                id: parseInt(conversation_id),
+                NOT: {
+                    user_id: parseInt(user_id)
+                }
+            },
+            select: {
+                id:true,
+            }
+        })
+
+        let profile = {}
+
+        if (user.length === 0) {
+            profile = await prismadb.conversation.findMany({
+                where: { id: parseInt(conversation_id) },
+                select: { 
+                    User_Conversation_ophthalmologist_idToUser: {
+                        select: {
+                            id: true,
+                            first_name: true,
+                            last_name: true,
+                            profile_picture: true
+                        }
+                    }
+                }
+        }) 
+    } else {
+        profile = await prismadb.conversation.findMany({
+            where: { id: parseInt(conversation_id) },
+            select: { 
+                User_Conversation_user_idToUser: {
+                    select: {
+                        id: true,
+                        first_name: true,
+                        last_name: true,
+                        profile_picture: true
+                    }
+                }
+            }
+        })
+    }
+
         //Get old message in this chat
         const chatlog = await prismadb.chat.findMany({
             where: {
@@ -288,6 +333,7 @@ export const chatlog = async (req:Request, res:Response) => {
 
         //Response success
         res.status(200).send({
+            profile,
             chatlog,
             success: true,
             message: "Chat log sent sucessfully."
@@ -310,6 +356,7 @@ export const chathistory = async (req:Request, res:Response) => {
 
         //Declare type ChatHistory
         type Chathistory = {
+            id: number
             chat: string
             conversation_id: number
             timestamp: Date
@@ -337,6 +384,7 @@ export const chathistory = async (req:Request, res:Response) => {
                 id:parseInt(user_id)
             },
             select: {
+                id: true,
                 first_name: true,
                 last_name: true,
                 profile_picture: true,
@@ -365,6 +413,7 @@ export const chathistory = async (req:Request, res:Response) => {
                     }
                 },
                 select: {
+                    id: true,
                     chat: true,
                     conversation_id: true,
                     timestamp: true,
@@ -406,6 +455,7 @@ export const chathistory = async (req:Request, res:Response) => {
                     }
                 },
                 select: {
+                    id: true,
                     chat: true,
                     conversation_id: true,
                     timestamp: true,

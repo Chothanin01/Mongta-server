@@ -37,7 +37,7 @@ const appServer = app.listen(PORT , () => {
 
 app.use(express.json());
 
-app.post("/api/findophth", middleware, findophth)
+app.post("/api/findophth", findophth)
 app.post("/api/sendchat", uploadmiddleware, middleware, sendchat)
 app.get("/api/chat/:conversation_id/:user_id", middleware, chatlog)
 app.get("/api/chathistory/:user_id", middleware, chathistory)
