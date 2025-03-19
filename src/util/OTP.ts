@@ -14,13 +14,15 @@ export async function verifyOTP(ref: string, code: string, phone_mail: string) {
             Ref: ref,
             OTP: code,
         }
-})
+    });
+    
     if (!otp) {
-        return "OTP not found." 
+        return "OTP not found.";
     }
-    if (otp.Ref === ref && otp.OTP === code && otp.phone_mail != phone_mail && otp.expires_at > new Date()) {
-        return "OTP verified."
+    
+    if (otp.Ref === ref && otp.OTP === code && otp.phone_mail === phone_mail && otp.expires_at > new Date()) {
+        return "OTP verified.";
     } else {
-        return "OTP invalid."
+        return "OTP invalid.";
     }
 }

@@ -14,7 +14,7 @@ const PORT = process.env.PORT || 5000;
 // Dynamic CORS configuration
 const allowedOrigins = process.env.NODE_ENV === 'production' 
   ? ['https://mongta-66831.firebaseapp.com'] 
-  : ['http://localhost:3000', 'http://10.0.2.2:3000','http://localhost:56899'];
+  : ['http://localhost:3000', 'http://10.0.2.2:3000','http://localhost:56899', 'http://10.0.2.2:5000'];
 
 app.use(cors({
   origin: (origin, callback) => {
