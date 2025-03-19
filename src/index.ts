@@ -1,7 +1,7 @@
 import express, { Request, Response } from "express";
 import cors from "cors";
 import { Server } from "socket.io";
-import { chathistory, chatlog, createchat, sendchat } from "./controller/ChatController";
+import { chathistory, chatlog, findophth, sendchat } from "./controller/ChatController";
 import { getNearbyHospitals } from './controller/HospitalController';
 import { ophtha_scanlog, savescanlog, scanlog } from "./controller/ScanLogController";
 import { searchHospitals } from './controller/HospitalSearch';
@@ -43,20 +43,20 @@ app.get("/nearby-hospitals", getNearbyHospitals)
 app.get("/api/scanlog/:user_id" , scanlog)
 app.post("/api/savescanlog", multipleupload, savescanlog)
 app.get("/api/scanlog/ophtha/:conversation_id", ophtha_scanlog)
-app.post("/api/createchat", middleware, createchat)
+app.post("/api/createchat", middleware, findophth)
 app.post("/api/sendchat", uploadmiddleware, middleware, sendchat)
 app.get("/api/chat/:conversation_id/:user_id", middleware, chatlog)
 app.get("/api/chathistory/:user_id", middleware, chathistory)
-app.post("/api/upload", uploadmiddleware, middleware, uploadtest)
-app.get("/api/geturl" , middleware, getfile)
 app.post("/api/register", register)
 app.post("/api/login", login)
 app.post("/api/googlelogin", googlelogin)
-app.post("/api/facebooklogin", facebooklogin)
 app.post("/api/googleregister", googleregister)
-app.post("/api/facebookregister", facebookregister)
 app.post("/api/otp/mail", OTP_email)
 app.post("/api/otp/phone", OTP_phone)
+app.get('/nearby-hospitals', getNearbyHospitals);
+app.get('/search-hospitals', searchHospitals);
+app.post("/api/upload", uploadmiddleware, uploadtest)
+app.get("/api/geturl" , getfile)
 
 //Declare socket.io
 export const io = new Server({
@@ -79,7 +79,6 @@ io.on('connection', (socket) => {
       });
   });
 });
-
 
 // Start Server
 app.listen(PORT, () => {

@@ -1,6 +1,6 @@
 import { Response, Request } from "express";
 import { prismadb } from "../util/db";
-import { bucket } from "../util/bucket";
+import { bucket } from "../util/firebase";
 import { generatescanid } from "../util/id";
 import FormData from 'form-data';
 import fetch from 'node-fetch';

@@ -5,12 +5,11 @@ import { bucket } from "../util/firebase";
 import multer from "multer";
 import { generatechatid } from "../util/id";
 
-export const createchat = async (req: Request, res: Response) =>  {
+export const findophth = async (req: Request, res: Response) =>  {
     try {
-        const { user_id, ophthaid } = req.body
-
+        const { user_id, sex } = req.body
         //Handle missing inputs.
-        if (!user_id || !ophthaid) {
+        if (!user_id || !sex) {
             res.status(400).json({
                 success: false,
                 message: "Missing required inputs."
@@ -34,20 +33,20 @@ export const createchat = async (req: Request, res: Response) =>  {
             })
             return
         }
-
-        //Handle ophthaid is not ophth.
-        const check_ophtha = await prismadb.user.findUnique({
-            where: {
-                id: ophthaid
-            },
-            select: {
+        
+        const ophth = await prismadb.user.findFirst({
+            where: { sex: sex, is_opthamologist: true, status: "online" },
+            select: { 
+                id: true,
                 is_opthamologist: true
-            }
+             } 
         })
-        if (check_ophtha?.is_opthamologist == false) {
-            res.status(409).send({
+
+        //Handle no ophthamologist
+        if (!ophth) {
+            res.status(404).send({
                 success: false,
-                message: "Cannot create chat with user that is not opthamologist."
+                message: "No ophthamologist available."
             })
             return
         }
@@ -56,7 +55,7 @@ export const createchat = async (req: Request, res: Response) =>  {
         const check_chat = await prismadb.conversation.findMany({
             where: {
                 user_id:user_id,
-                ophthalmologist_id:ophthaid
+                ophthalmologist_id:ophth.id
             }
         })
         if (check_chat.length > 0) {
@@ -75,12 +74,12 @@ export const createchat = async (req: Request, res: Response) =>  {
             data: {
                 id,
                 user_id,
-                ophthalmologist_id:ophthaid
+                ophthalmologist_id:ophth.id
             }
         })
 
         //Send message that chat is create
-        io.emit('newChat', { user_id, ophthaid, conversation_id: create.id });
+        io.emit('newChat', { user_id, ophth: ophth.id, conversation_id: create.id });
         
         //Response success
         res.status(201).send({
@@ -123,6 +122,7 @@ export const sendchat = async (req:Request, res:Response) => {
                 success: false,
                 message: "Can't send message and image together."
             })
+            return
         }
 
         //Handle chat not create and sender not in this chat
@@ -245,9 +245,9 @@ export const chatlog = async (req:Request, res:Response) => {
         const { conversation_id, user_id } = req.params
 
         //Handle chat not exist
-        const check_chat = await prismadb.chat.findMany({
+        const check_chat = await prismadb.conversation.findMany({
             where: {
-                conversation_id:parseInt(conversation_id)
+                id:parseInt(conversation_id)
             }
         })
         if (check_chat.length <= 0) {
@@ -270,6 +270,50 @@ export const chatlog = async (req:Request, res:Response) => {
             }
         })
 
+        const user = await prismadb.conversation.findMany({
+            where: {
+                id: parseInt(conversation_id),
+                NOT: {
+                    user_id: parseInt(user_id)
+                }
+            },
+            select: {
+                id:true,
+            }
+        })
+
+        let profile = {}
+
+        if (user.length === 0) {
+            profile = await prismadb.conversation.findMany({
+                where: { id: parseInt(conversation_id) },
+                select: { 
+                    User_Conversation_ophthalmologist_idToUser: {
+                        select: {
+                            id: true,
+                            first_name: true,
+                            last_name: true,
+                            profile_picture: true
+                        }
+                    }
+                }
+        }) 
+    } else {
+        profile = await prismadb.conversation.findMany({
+            where: { id: parseInt(conversation_id) },
+            select: { 
+                User_Conversation_user_idToUser: {
+                    select: {
+                        id: true,
+                        first_name: true,
+                        last_name: true,
+                        profile_picture: true
+                    }
+                }
+            }
+        })
+    }
+
         //Get old message in this chat
         const chatlog = await prismadb.chat.findMany({
             where: {
@@ -289,6 +333,7 @@ export const chatlog = async (req:Request, res:Response) => {
 
         //Response success
         res.status(200).send({
+            profile,
             chatlog,
             success: true,
             message: "Chat log sent sucessfully."
@@ -311,6 +356,7 @@ export const chathistory = async (req:Request, res:Response) => {
 
         //Declare type ChatHistory
         type Chathistory = {
+            id: number
             chat: string
             conversation_id: number
             timestamp: Date
@@ -338,6 +384,7 @@ export const chathistory = async (req:Request, res:Response) => {
                 id:parseInt(user_id)
             },
             select: {
+                id: true,
                 first_name: true,
                 last_name: true,
                 profile_picture: true,
@@ -366,6 +413,7 @@ export const chathistory = async (req:Request, res:Response) => {
                     }
                 },
                 select: {
+                    id: true,
                     chat: true,
                     conversation_id: true,
                     timestamp: true,
@@ -407,6 +455,7 @@ export const chathistory = async (req:Request, res:Response) => {
                     }
                 },
                 select: {
+                    id: true,
                     chat: true,
                     conversation_id: true,
                     timestamp: true,
