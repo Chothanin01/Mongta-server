@@ -13,16 +13,27 @@
   "license": "ISC",
   "dependencies": {
     "@prisma/client": "^6.2.1",
+    "@types/bcrypt": "^5.0.2",
+    "@types/jsonwebtoken": "^9.0.8",
     "@types/multer": "^1.4.12",
     "@types/node-fetch": "^2.6.12",
     "axios": "^1.7.9",
     "cors": "^2.8.5",
+    "@types/nodemailer": "^6.4.17",
+    "@types/uuid": "^10.0.0",
+    "bcrypt": "^5.1.1",
+    "crypto": "^1.0.1",
     "dotenv": "^16.4.7",
     "express": "^4.21.2",
     "firebase-admin": "^13.0.2",
+    "google-auth-library": "^9.15.1",
+    "jsonwebtoken": "^9.0.2",
     "multer": "^1.4.5-lts.1",
+    "nodemailer": "^6.10.0",
     "prisma": "^6.2.1",
-    "socket.io": "^4.8.1"
+    "socket.io": "^4.8.1",
+    "twilio": "^5.4.5",
+    "uuid": "^11.0.5"
   },
   "devDependencies": {
     "@types/axios": "^0.9.36",
