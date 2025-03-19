@@ -1,0 +1,57 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Chat {
+  id              Int          @id @default(autoincrement())
+  conversation_id Int
+  sender_id       Int
+  chat            String       @db.VarChar(255)
+  timestamp       DateTime     @db.Timestamp(6)
+  status          String       @db.VarChar(9)
+  Conversation    Conversation @relation(fields: [conversation_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  User            User         @relation(fields: [sender_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model Conversation {
+  id                                         Int    @id @default(autoincrement())
+  user_id                                    Int?
+  ophthalmologist_id                         Int?
+  Chat                                       Chat[]
+  User_Conversation_ophthalmologist_idToUser User?  @relation("Conversation_ophthalmologist_idToUser", fields: [ophthalmologist_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  User_Conversation_user_idToUser            User?  @relation("Conversation_user_idToUser", fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model Scan {
+  id          Int      @id @default(autoincrement())
+  user_id     Int?
+  date    DateTime @db.Date
+  description String?  @db.VarChar(255)
+  va          Json?
+  photo       Json?
+  User        User?    @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model User {
+  id                                                 Int            @id @default(autoincrement())
+  first_name                                         String         @db.VarChar(32)
+  last_name                                          String         @db.VarChar(32)
+  username                                           String         @unique @db.VarChar(32)
+  password                                           String
+  sex                                                String         @db.VarChar(6)
+  date_of_birth                                      DateTime       @db.Date
+  profile_picture                                    String
+  is_opthamologist                                   Boolean
+  status                                             String         @db.VarChar(7)
+  phone                                              Json?
+  email                                              Json?
+  Chat                                               Chat[]
+  Conversation_Conversation_ophthalmologist_idToUser Conversation[] @relation("Conversation_ophthalmologist_idToUser")
+  Conversation_Conversation_user_idToUser            Conversation[] @relation("Conversation_user_idToUser")
+  Scan                                               Scan[]
+}
