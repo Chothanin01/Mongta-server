@@ -4,7 +4,7 @@ import { Server } from "socket.io";
 import { chathistory, chatlog, findophth, sendchat } from "./controller/ChatController";
 import { facebookregister, googleregister, register } from "./controller/RegisterController";
 import { googlelogin, login } from "./controller/LoginController";
-import { middleware } from "./controller/MiddlewareController";
+import { getuser, middleware } from "./controller/MiddlewareController";
 import { nearchart } from "./controller/NearChartController";
 import { getNearbyHospitals } from './controller/HospitalController';
 import { searchHospitals } from './controller/HospitalSearch';
@@ -54,6 +54,7 @@ app.post("/api/savescanlog", multipleupload, savescanlog)
 app.get("/api/scanlog/ophtha/:conversation_id", ophtha_scanlog)
 app.post("/api/upload", uploadmiddleware, uploadtest)
 app.get("/api/geturl" , getfile)
+app.get("/api/getuser", middleware, getuser)
 
 //Declare socket.io
 export const io = new Server({

@@ -3,7 +3,7 @@ import { prismadb } from "../util/db";
 import { comparePassword } from "../util/bcrypt";
 import { auth } from "../util/firebase";
 import { client } from "../util/OAUTH";
-import axios from "axios";
+import jwt from "jsonwebtoken";
 
 export const login = async (req: Request, res: Response) => {
     try {
@@ -41,14 +41,18 @@ export const login = async (req: Request, res: Response) => {
             return
         }
 
-        const firebaseToken = await auth.createCustomToken(user.id.toString());
+        const token = jwt.sign(
+            { user_id: user.id },
+            process.env.JWT_SECRET as string,
+            { expiresIn: "7d" }
+        );
 
         res.status(200).send({
             user: {
                 id: user.id,
                 username: user.username,
             },
-            token: firebaseToken,
+            token: token,
             message: "Login successfully."
         })
 
