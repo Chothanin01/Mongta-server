@@ -33,9 +33,29 @@ export const findophth = async (req: Request, res: Response) =>  {
             })
             return
         }
+
+        const check_chat = await prismadb.conversation.findMany({
+            where: {
+                user_id:user_id,
+            }
+        })
         
-        const ophth = await prismadb.user.findFirst({
-            where: { sex: sex, is_opthamologist: true, status: "online" },
+        const exist_chat = check_chat.map((chat) => chat.ophthalmologist_id)
+
+        
+        const ophth_condition:any = {
+            is_opthamologist: true,
+            status: "online",
+            id: { notIn: exist_chat }
+        }
+
+        if ( sex && sex !== "both" ) {
+            ophth_condition.sex = sex
+        }
+
+
+        const all_opht = await prismadb.user.findMany({
+            where: ophth_condition,
             select: { 
                 id: true,
                 is_opthamologist: true
@@ -43,7 +63,7 @@ export const findophth = async (req: Request, res: Response) =>  {
         })
 
         //Handle no ophthamologist
-        if (!ophth) {
+        if (all_opht.length === 0) {
             res.status(404).send({
                 success: false,
                 message: "No ophthamologist available."
@@ -51,20 +71,8 @@ export const findophth = async (req: Request, res: Response) =>  {
             return
         }
 
-        //Handle already created chat
-        const check_chat = await prismadb.conversation.findMany({
-            where: {
-                user_id:user_id,
-                ophthalmologist_id:ophth.id
-            }
-        })
-        if (check_chat.length > 0) {
-            res.status(409).send({
-                success: false,
-                message: "Chat already created."
-            })
-            return
-        }
+        const random_opht = Math.floor(Math.random() * all_opht.length)
+        const opht = all_opht[random_opht]
 
         //Generate chat id
         const id = await generatechatid()
@@ -74,12 +82,12 @@ export const findophth = async (req: Request, res: Response) =>  {
             data: {
                 id,
                 user_id,
-                ophthalmologist_id:ophth.id
+                ophthalmologist_id:opht.id
             }
         })
 
         //Send message that chat is create
-        io.emit('newChat', { user_id, ophth: ophth.id, conversation_id: create.id });
+        io.emit('newChat', { user_id, ophth: opht.id, conversation_id: create.id });
         
         //Response success
         res.status(201).send({

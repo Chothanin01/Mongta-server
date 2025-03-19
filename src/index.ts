@@ -3,7 +3,7 @@ import cors from "cors";
 import { Server } from "socket.io";
 import { chathistory, chatlog, findophth, sendchat } from "./controller/ChatController";
 import { facebookregister, googleregister, register } from "./controller/RegisterController";
-import { facebooklogin, googlelogin, login } from "./controller/LoginController";
+import { googlelogin, login } from "./controller/LoginController";
 import { middleware } from "./controller/MiddlewareController";
 import { nearchart } from "./controller/NearChartController";
 import { getNearbyHospitals } from './controller/HospitalController';
@@ -44,7 +44,6 @@ app.get("/api/chathistory/:user_id", middleware, chathistory)
 app.post("/api/register", register)
 app.post("/api/login", login)
 app.post("/api/googlelogin", googlelogin)
-app.post("/api/facebooklogin", facebooklogin)
 app.post("/api/googleregister", googleregister)
 app.post("/api/facebookregister", facebookregister)
 app.get('/nearby-hospitals', getNearbyHospitals);
