@@ -1,4 +1,4 @@
-import e, { Request, Response } from "express";
+import { Request, Response } from "express";
 import { prismadb } from "../util/db";
 import { generateOTP } from "../util/OTP";
 import { sendMail } from "../util/phone_mail";

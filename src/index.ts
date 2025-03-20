@@ -5,9 +5,9 @@ import { chathistory, chatlog, findophth, sendchat } from "./controller/ChatCont
 import { getNearbyHospitals } from './controller/HospitalController';
 import { ophtha_scanlog, savescanlog, scanlog } from "./controller/ScanLogController";
 import { searchHospitals } from './controller/HospitalSearch';
-import { aiupload, getfile, multipleupload, uploadmiddleware, uploadtest } from "./controller/FirebaseController";
-import { facebookregister, googleregister, register } from "./controller/RegisterController";
-import { facebooklogin, googlelogin, login } from "./controller/LoginController";
+import { multipleupload, uploadmiddleware } from "./controller/FirebaseController";
+import { googleregister, register } from "./controller/RegisterController";
+import { googlelogin, login } from "./controller/LoginController";
 import { middleware } from "./controller/MiddlewareController";
 import { OTP_email, OTP_phone } from "./controller/OTPController";
 
@@ -55,8 +55,6 @@ app.post("/api/otp/mail", OTP_email)
 app.post("/api/otp/phone", OTP_phone)
 app.get('/nearby-hospitals', getNearbyHospitals);
 app.get('/search-hospitals', searchHospitals);
-app.post("/api/upload", uploadmiddleware, uploadtest)
-app.get("/api/geturl" , getfile)
 
 //Declare socket.io
 export const io = new Server({
