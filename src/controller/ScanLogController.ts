@@ -196,14 +196,14 @@ export const savescanlog = async (req: Request, res: Response): Promise<void> =>
 
         //Validate AI analysis
         const aiDescription = ai_analysis.description || description;
-        const aiPicDescription = ai_analysis.pic_description || pic_description;
-        const aiPicLeft = ai_analysis.pic_left_description || pic_left_description;
-        const aiPicRight = ai_analysis.pic_right_description || pic_right_description;
+        const ai_Pic_Description = ai_analysis.pic_description || pic_description;
+        const ai_Pic_Left = ai_analysis.pic_left_description || pic_left_description;
+        const ai_Pic_Right = ai_analysis.pic_right_description || pic_right_description;
 
         //Handle missing AI analysis
         if (!user_id || !aiDescription || 
             !line_right || !line_left || !va_right || !va_left || !near_description || 
-            !aiPicDescription || !aiPicLeft || !aiPicRight) {
+            !ai_Pic_Description || !ai_Pic_Left || !ai_Pic_Right) {
             res.status(400).send({
                 success: false,
                 message: "Missing required AI analysis."
@@ -354,7 +354,7 @@ export const savescanlog = async (req: Request, res: Response): Promise<void> =>
                     left_eye: urls.left_eye,
                     ai_right: urls.ai_right,
                     ai_left: urls.ai_left,
-                    description: aiPicDescription
+                    description: ai_Pic_Description
                 },
                 date
             }
@@ -363,6 +363,8 @@ export const savescanlog = async (req: Request, res: Response): Promise<void> =>
         //Response success
         res.status(200).send({
             scanlog,
+            description_left: ai_Pic_Left,
+            description_right: ai_Pic_Right,
             success: true,
             message: "Scan log saved successfully."
         });
