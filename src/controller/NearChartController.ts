@@ -50,7 +50,7 @@ export const nearchart = async (req: Request,res: Response) => {
         const left_va = va[left-1]
 
         //Risk
-        const all_risk = [3, 2, 1]
+        const all_risk = [3, 2, 1, 1]
         let right_risk = 0
         let left_risk = 0
 
