@@ -50,7 +50,7 @@ export const nearchart = async (req: Request,res: Response) => {
         const left_va = va[left-1]
 
         //Risk
-        const all_risk = [3, 2, 1]
+        const all_risk = [3, 2, 1, 1]
         let right_risk = 0
         let left_risk = 0
 
@@ -65,6 +65,17 @@ export const nearchart = async (req: Request,res: Response) => {
         } else {
             left_risk = all_risk[Math.floor(left/3)]
         }
+
+        //Descripton
+        let description = ``
+        const risk_description = ["ปกติ", "เริ่มมีความผิดปกติ", "มีความผิดปกติ" ]
+        if (right > left) {
+            description = `เกณฑ์การวัดค่าสายตา บรรทัดที่ ${left}-${right} ระดับการมองเห็น${risk_description[left_risk-1]}`
+        } else if (left > right) {
+            description = `เกณฑ์การวัดค่าสายตา บรรทัดที่ ${right}-${left} ระดับการมองเห็น${risk_description[right_risk-1]}`
+        } else {
+            description = `เกณฑ์การวัดค่าสายตา บรรทัดที่ ${left} ระดับการมองเห็น${risk_description[left_risk-1]}`
+        }
         
         //Response success
         res.status(200).send({
@@ -78,6 +89,7 @@ export const nearchart = async (req: Request,res: Response) => {
                 va_left:left_va,
                 left_risk
             },
+            description,
             success: true,
             message: "Near chart result sent successfully."
         })
