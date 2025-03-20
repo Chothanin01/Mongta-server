@@ -69,13 +69,13 @@ export const nearchart = async (req: Request,res: Response) => {
         //Response success
         res.status(200).send({
             right_eye: {
-                right_line: right,
-                right_va,
+                line_right: right,
+                va_right:right_va,
                 right_risk
             },
             left_eye: {
-                left_line: left,
-                left_va,
+                line_left: left,
+                va_left:left_va,
                 left_risk
             },
             success: true,
