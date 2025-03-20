@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "tsc",
+    "test": "jest --detectOpenHandles",
     "start": "ts-node src/index.ts",
     "dev": "nodemon",
     "build": "tsc --watch"
@@ -14,23 +14,28 @@
   "dependencies": {
     "@prisma/client": "^6.2.1",
     "@types/multer": "^1.4.12",
+    "axios": "^1.7.9",
+    "bcrypt": "^5.1.1",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
     "express": "^4.21.2",
     "firebase-admin": "^13.0.2",
     "multer": "^1.4.5-lts.1",
     "prisma": "^6.2.1",
-    "socket.io": "^4.8.1",
-    "axios": "^1.7.9",
-    "bcrypt": "^5.1.1",
-    "cors": "^2.8.5",
-    "dotenv": "^16.4.7"
+    "socket.io": "^4.8.1"
   },
   "devDependencies": {
     "@types/axios": "^0.9.36",
     "@types/cors": "^2.8.17",
     "@types/express": "^5.0.0",
+    "@types/jest": "^29.5.14",
     "@types/node": "^22.12.0",
+    "@types/supertest": "^6.0.2",
     "express": "^4.21.2",
+    "jest": "^29.7.0",
     "nodemon": "^3.1.9",
+    "supertest": "^7.0.0",
+    "ts-jest": "^29.2.6",
     "ts-node": "^10.9.2",
     "typescript": "^5.7.3"
   }
