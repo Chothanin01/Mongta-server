@@ -10,6 +10,7 @@ import { googleregister, register } from "./controller/RegisterController";
 import { googlelogin, login } from "./controller/LoginController";
 import { middleware } from "./controller/MiddlewareController";
 import { OTP_email, OTP_phone } from "./controller/OTPController";
+import { nearchart } from "./controller/NearChartController";
 
 const app = express();
 app.use(cors());
@@ -55,6 +56,7 @@ app.post("/api/otp/mail", OTP_email)
 app.post("/api/otp/phone", OTP_phone)
 app.get('/nearby-hospitals', getNearbyHospitals);
 app.get('/search-hospitals', searchHospitals);
+app.post("/api/nearchart", nearchart)
 
 //Declare socket.io
 export const io = new Server({
