@@ -15,7 +15,7 @@ import { nearchart } from "./controller/NearChartController";
 const app = express();
 app.use(cors());
 
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 5000;
 // Dynamic CORS configuration
 const allowedOrigins = process.env.NODE_ENV === 'production' 
   ? ['https://mongta-66831.firebaseapp.com'] 
@@ -79,8 +79,3 @@ io.on('connection', (socket) => {
       });
   });
 });
-
-// Start Server
-app.listen(PORT, () => {
-  console.log(`Server is running on http://localhost:${PORT}`);
-})
