@@ -5,6 +5,9 @@ import { generatescanid } from "../util/id";
 import FormData from 'form-data';
 import fetch from 'node-fetch';
 
+const DEBUG_SCAN_UPLOADS = true;
+
+
 export const scanlog = async (req: Request,res: Response) => {
     try {
         const { user_id } = req.params
@@ -97,6 +100,44 @@ export const ophtha_scanlog = async (req: Request, res:Response) => {
 
 export const savescanlog = async (req: Request, res: Response): Promise<void> => {
     try {
+
+        // Debug: Log all received fields and files
+        if (DEBUG_SCAN_UPLOADS) {
+            console.log('\n==== SCAN UPLOAD DEBUG ====');
+            console.log('Request fields:', req.body);
+            console.log('Files received:', Object.keys(req.files || {}));
+            
+            // Check which required fields are missing
+            const requiredFields = [
+                'user_id',
+                'timestamp',
+                'type',
+                'status',
+                // Add all other required fields here
+            ];
+            
+            const missingFields = requiredFields.filter(field => !req.body[field]);
+            if (missingFields.length > 0) {
+                console.log('MISSING FIELDS:', missingFields);
+            } else {
+                console.log('All required fields are present');
+            }
+            
+            // Check for required files
+            const requiredFiles = ['right_eye', 'left_eye', 'ai_right', 'ai_left'];
+            const files = req.files as { [fieldname: string]: Express.Multer.File[] };
+            const missingFiles = requiredFiles.filter(file => !files || !files[file]);
+            
+            if (missingFiles.length > 0) {
+                console.log('MISSING FILES:', missingFiles);
+            } else {
+                console.log('All required files are present');
+            }
+            
+            console.log('==== END DEBUG ====\n');
+        }
+
+        
         const { user_id, line_right, line_left, va_right, va_left, near_description, 
                 ai_right_image_base64, ai_left_image_base64, description, 
                 pic_description, pic_left_description, pic_right_description } = req.body;
