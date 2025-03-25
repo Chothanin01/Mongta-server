@@ -8,9 +8,10 @@ import { searchHospitals } from './controller/HospitalSearch';
 import { multipleupload, uploadmiddleware } from "./controller/FirebaseController";
 import { googleregister, register } from "./controller/RegisterController";
 import { googlelogin, login } from "./controller/LoginController";
-import { getuser, middleware } from "./controller/MiddlewareController";
-import { OTP_email, OTP_phone } from "./controller/OTPController";
+import { middleware } from "./controller/MiddlewareController";
+import { OTP_email, OTP } from "./controller/OTPController";
 import { nearchart } from "./controller/NearChartController";
+import { changePassword, changeprofilepicture, getuser } from "./controller/ProflieController";
 
 const app = express();
 app.use(cors());
@@ -53,7 +54,7 @@ app.post("/api/login", login)
 app.post("/api/googlelogin", googlelogin)
 app.post("/api/googleregister", googleregister)
 app.post("/api/otp/mail", OTP_email)
-app.post("/api/otp/phone", OTP_phone)
+app.post("/api/otp", OTP)
 app.get('/nearby-hospitals', getNearbyHospitals);
 app.get('/search-hospitals', searchHospitals);
 app.post("/api/nearchart", nearchart)
@@ -61,6 +62,8 @@ app.get("/api/scanlog/:user_id" , scanlog)
 app.post("/api/savescanlog", multipleupload, savescanlog)
 app.get("/api/scanlog/ophtha/:conversation_id", ophtha_scanlog)
 app.get("/api/getuser", middleware, getuser)
+app.post("/api/changepassword", middleware, changePassword)
+app.post("/api/changeprofilepicture", uploadmiddleware, middleware, changeprofilepicture)
 
 //Declare socket.io
 export const io = new Server({
@@ -83,8 +86,3 @@ io.on('connection', (socket) => {
       });
   });
 });
-
-// Start Server
-app.listen(PORT, () => {
-  console.log(`Server is running on http://localhost:${PORT}`);
-})

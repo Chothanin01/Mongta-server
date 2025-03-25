@@ -113,7 +113,7 @@ export const register = async(req: Request,res: Response) => {
                     status: 'online',
                     phone: phonejson,
                     email: emailjson,
-                    profile_picture: "https://firebasestorage.googleapis.com/v0/b/mongta-66831.firebasestorage.app/o/profile.jpg?alt=media&token=43c03659-4c2f-4212-8393-3238eacc403d"
+                    profile_picture: "https://firebasestorage.googleapis.com/v0/b/mongta-66831.firebasestorage.app/o/profile%2Fprofile.jpg?alt=media&token=2925bbc2-209b-4c3a-af4f-1af990f4be42"
                 }
             })
 

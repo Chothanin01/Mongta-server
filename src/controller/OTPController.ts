@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import { prismadb } from "../util/db";
 import { generateOTP } from "../util/OTP";
 import { sendMail } from "../util/phone_mail";
+import { verifyOTP } from "../util/OTP";
 
 export const OTP_email = async (req: Request, res: Response) => {
     try {
@@ -47,8 +48,32 @@ export const OTP_email = async (req: Request, res: Response) => {
     }
 }
 
-export const OTP_phone = async (req: Request, res: Response) => {
+export const OTP = async (req: Request, res: Response) => {
     try {
+        const { otp, otp_ref, email} = req.body;
+        //Handle missing inputs
+        if (!otp || !otp_ref || !email) {
+            res.status(400).json({
+                success: false,
+                message: "Missing required inputs.",
+            })
+            return
+        }
+
+        const verify = await verifyOTP(otp_ref, otp, email)
+        if (verify !== "OTP verified.") {
+            res.status(400).json({
+                success: false,
+                message: verify
+            })
+            return
+        }
+
+        //Response Success
+        res.status(200).json({
+            success: true,
+            message: "Verified successfully."
+        })
 
     } catch (error) {
         //Response Error
