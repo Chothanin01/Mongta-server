@@ -164,6 +164,64 @@ export const changePassword = async (req: AuthRequest,res: Response) => {
     }
 }
 
+export const forgetPassword = async (req: AuthRequest,res: Response) => {
+    try {
+        const { email, new_password } = req.body;
+
+        //Handle missing inputs
+        if (!new_password || !email) {
+            res.status(400).json({
+                success: false,
+                message: "Missing required inputs.",
+            })
+            return
+        }
+
+        //Find user in database
+        const user = await prismadb.user.findFirst({
+            where: { email: {
+                path: ['email'],
+                equals: email
+            } },
+            select: {
+                id: true
+            }
+        })
+        if (!user) {
+            res.status(401).json({ 
+                success: false, 
+                message: 'User not found.' 
+            });
+            return
+        }  
+
+        //Hash new password
+        const password = await hashPassword(new_password)
+
+        //Update password
+        await prismadb.user.update({
+            where: { id: user?.id },
+            data: {
+                password: password
+            }
+        })
+
+        //Response success
+        res.status(200).send({
+            success: true,
+            message: "Password changed successfully."
+        })
+    } catch (error) {
+        //Response Error
+        console.log(error);
+        res.status(500).json({
+            error,
+            success: false,
+            message: "An error occurred."
+        })
+    }
+}
+
 export const changeprofilepicture = async (req: AuthRequest,res: Response) => {
     try {
         const authheader = req.headers.authorization
@@ -266,7 +324,7 @@ export const changeprofilepicture = async (req: AuthRequest,res: Response) => {
             message: "Profile picture changed successfully."
         })
     } catch (error) {
-         //Response Error
+        //Response Error
          console.log(error);
          res.status(500).json({
              error,
@@ -274,4 +332,103 @@ export const changeprofilepicture = async (req: AuthRequest,res: Response) => {
              message: "An error occurred."
          })
      }
+}
+
+export const updateuser = async (req: AuthRequest,res: Response) => {
+    try {
+        const authheader = req.headers.authorization
+
+        //Handle token not found
+        if (!authheader) {
+            res.status(400).send({
+                success: false,
+                message: "Token not found."
+            })
+            return
+        } 
+
+        //Get token
+        const token = authheader && authheader.split(" ")[1];
+
+        //Handle wrong token
+        if (!token) {
+            res.status(400).send({
+              success: false,
+              message: "Invalid token format.",
+            });
+            return
+          }
+        
+        //Decode token
+        const decode:any = jwt.verify(token, process.env.JWT_SECRET as string);
+
+        //Find user in database
+        const user = await prismadb.user.findUnique({
+            where: { id: Number(decode.user_id) },
+            select: {
+                id: true,
+            }
+        })
+        if (!user) {
+            res.status(401).json({ 
+                success: false, 
+                message: 'User not found.' 
+            });
+            return
+        }
+
+        const { first_name, last_name, email } = req.body;
+
+        //Handle missing inputs
+        if (!first_name || !last_name || !email) {
+            res.status(400).json({
+                success: false,
+                message: "Missing required inputs.",
+            })
+            return
+        }
+
+        const check_email = await prismadb.user.findFirst({
+            where: { email: {
+                path: ['email'],
+                equals: email
+            } },
+            select: {
+                id: true
+            }
+        })
+        if (check_email && check_email.id !== Number(decode.user_id)) {
+            res.status(400).json({
+                success: false,
+                message: "Email already exists."
+            })
+            return
+        }
+
+        //Update user
+        await prismadb.user.update({
+            where: { id: Number(decode.user_id) },
+            data: {
+                first_name,
+                last_name,
+                email
+            }
+        })
+
+        //Response success
+        res.status(200).send({
+            success: true,
+            message: "User info updated successfully."
+        })
+
+        
+    } catch (error) {
+        //Response Error
+        console.log(error);
+        res.status(500).json({
+            error,
+            success: false,
+            message: "An error occurred."
+        })
+    }
 }
