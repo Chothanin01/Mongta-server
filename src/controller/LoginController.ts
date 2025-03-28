@@ -3,7 +3,6 @@ import { prismadb } from "../lib/db";
 import { comparePassword } from "../util/bcrypt";
 import { auth } from "../util/firebase";
 import { client } from "../util/OAUTH";
-import axios from "axios";
 
 export const login = async (req: Request, res: Response) => {
     try {

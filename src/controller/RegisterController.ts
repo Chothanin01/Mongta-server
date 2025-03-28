@@ -61,45 +61,22 @@ export const register = async(req: Request,res: Response) => {
             return
         }
 
-        let user =  {}
-        try {
-            //Create user in firebase
-            const user_firebase = await auth.createUser({
-                email,
-                password,
-                displayName: username
-            })
-            
-            //Create user in database
-            user = await prismadb.user.create({
-                data: {
-                    id,
-                    first_name,
-                    last_name,
-                    username,
-                    password: hash,
-                    sex,
-                    date_of_birth: new Date(dob),
-                    is_opthamologist: false,
-                    status: 'active',
-                    phone: phonejson,
-                    email: emailjson,
-                    profile_picture: "https://firebasestorage.googleapis.com/v0/b/mongta-66831.firebasestorage.app/o/profile.jpg?alt=media&token=43c03659-4c2f-4212-8393-3238eacc403d"
-                }
-            })
-
-        } catch (error) {
-            //Handle create user failed
-            console.log(error);
-            const del = await auth.getUserByEmail(email)
-            await auth.deleteUser(del.uid)
-            res.status(500).json({
-                error,
-                success: false,
-                message: "An error occurred while creating user."
-            })
-            return
-        }  
+        const user = await prismadb.user.create({
+            data: {
+                id,
+                first_name,
+                last_name,
+                username,
+                password: hash,
+                sex,
+                date_of_birth: new Date(dob),
+                is_opthamologist: false,
+                status: 'active',
+                phone: phonejson,
+                email: emailjson,
+                profile_picture: "https://firebasestorage.googleapis.com/v0/b/mongta-66831.firebasestorage.app/o/profile.jpg?alt=media&token=43c03659-4c2f-4212-8393-3238eacc403d"
+            }
+        })
 
         //Response success
         res.status(201).send({
@@ -182,46 +159,25 @@ export const googleregister = async (req: Request,res: Response) => {
             })
             return
         }
-
-        let user = {}
-        try {
-            //Create user in firebase
-            const user_firebase = await auth.createUser({
-                email,
+        
+        //Create user
+        const user = await prismadb.user.create({
+            data: {
+                id,
+                first_name,
+                last_name,
+                username: email?.split('@')[0] || '',
                 password: '',
-                displayName: email?.split('@')[0] || ''
-            })
-            
-            //Create user in database
-            user = await prismadb.user.create({
-                data: {
-                    id,
-                    first_name,
-                    last_name,
-                    username: email?.split('@')[0] || '',
-                    password: '',
-                    sex,
-                    date_of_birth: new Date(dob),
-                    is_opthamologist: false,
-                    status: 'active',
-                    phone: phonejson,
-                    email: emailjson,
-                    profile_picture: "https://firebasestorage.googleapis.com/v0/b/mongta-66831.firebasestorage.app/o/profile.jpg?alt=media&token=43c03659-4c2f-4212-8393-3238eacc403d"
-                }
-            })
-
-        } catch (error) {
-            //Handle create user failed
-            console.log(error);
-            const del = await auth.getUserByEmail(email)
-            await auth.deleteUser(del.uid)
-            res.status(500).json({
-                error,
-                success: false,
-                message: "An error occurred while creating user."
-            })
-            return
-        }  
+                sex,
+                date_of_birth: new Date(dob),
+                is_opthamologist: false,
+                status: 'active',
+                phone: phonejson,
+                email: emailjson,
+                profile_picture: "https://firebasestorage.googleapis.com/v0/b/mongta-66831.firebasestorage.app/o/profile.jpg?alt=media&token=43c03659-4c2f-4212-8393-3238eacc403d"
+            }
+        })
+        
 
         //Response success
         res.status(201).json({
