@@ -3,7 +3,6 @@ import { prismadb } from "../util/db";
 import { comparePassword } from "../util/bcrypt";
 import { auth } from "../util/firebase";
 import { client } from "../util/OAUTH";
-import axios from "axios";
 
 export const login = async (req: Request, res: Response) => {
     try {
@@ -125,79 +124,6 @@ export const googlelogin = async (req: Request,res: Response) => {
                 sub: payload.sub
             },
             idtoken
-        })
-    } catch (error) {
-        //Response Error
-        console.log(error);
-        res.status(500).json({
-            error,
-            success: false,
-            message: "An error occurred."
-        })
-    }
-}
-
-export const facebooklogin = async (req: Request,res: Response) => {
-    interface FacebookUser {
-        facebookId: string;
-        email?: string; // Email may not always be available
-        name: string;
-        picture?: { data: { url: string } }; // Picture might be an object
-    }
-    try {
-        const { accesstoken } = req.body
-
-        //Handle missing inputs
-        if (!accesstoken) {
-            res.status(400).json({
-                success: false,
-                message: "Missing required inputs.",
-            })
-            return
-        }
-
-        //Verify the Facebook token
-        const fbResponse = await axios.get(
-            `https://graph.facebook.com/me?fields=id,name,email,picture&access_token=${accesstoken}`
-        )
-
-        const { facebookId, email, name, picture } = fbResponse.data as FacebookUser
-        if (!email) {
-            res.status(400).json({
-                success: false,
-                message: "Email not provided by Facebook."
-            })
-            return
-        }
-        //Find user
-        const user = await prismadb.user.findFirst({
-            where: {
-                email: {
-                    path: ["email"],
-                    equals: email
-                }
-            }
-        })
-        //Already register
-        if (user) {
-            const token = auth.createCustomToken(facebookId)
-            res.status(200).send({
-                isRegister: true,
-                token,
-                user,
-                success: true,
-                message: "Login with google success." 
-            })
-            return
-        }
-        //Not register
-        res.status(200).send({
-            isRegister: false,
-            facebook: {
-                email,
-                picture,
-                facebookId
-            }
         })
     } catch (error) {
         //Response Error
