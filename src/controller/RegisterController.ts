@@ -10,7 +10,7 @@ export const register = async(req: Request,res: Response) => {
         const { otp, otp_ref, username, password, phonenumber, email, first_name, last_name, sex, dob , method} = req.body
         
         //Handle missing inputs
-        if (!otp || !otp_ref || !username || !password || !phonenumber || !email || !first_name || !last_name || !sex || !dob || !method) {
+        if (!otp || !otp_ref || !username || !password || !phonenumber || !email || !first_name || !last_name || !sex || !dob ) {
             res.status(400).json({
                 success: false,
                 message: "Missing required inputs.",
@@ -29,33 +29,19 @@ export const register = async(req: Request,res: Response) => {
         }
 
         //Verify OTP
-        if (method === 'email') {
-            const verify = await verifyOTP(otp_ref, otp, email)
-            if (verify !== "OTP verified.") {
-                res.status(400).json({
-                    success: false,
-                    message: verify
-                })
-                return
-            }
-            emailjson = {
-                "email": email,
-                "is_verified": true
-            }
-        } else if (method === 'phone') { 
-            const verify = await verifyOTP(otp_ref, otp, phonenumber)
-            if (verify !== "OTP verified.") {
-                res.status(400).json({
-                    success: false,
-                    message: verify
-                })
-                return
-            }
-            phonejson = {
-                "phonenumber": phonenumber,
-                "is_verified": true
-            }
+        const verify = await verifyOTP(otp_ref, otp, email)
+        if (verify !== "OTP verified.") {
+            res.status(400).json({
+                success: false,
+                message: verify
+            })
+            return
         }
+        emailjson = {
+            "email": email,
+            "is_verified": true
+        }
+
         //Hash password
         const hash = await hashPassword(password)
 
