@@ -100,47 +100,8 @@ export const ophtha_scanlog = async (req: Request, res:Response) => {
 
 export const savescanlog = async (req: Request, res: Response): Promise<void> => {
     try {
-
-        // Debug: Log all received fields and files
-        if (DEBUG_SCAN_UPLOADS) {
-            console.log('\n==== SCAN UPLOAD DEBUG ====');
-            console.log('Request fields:', req.body);
-            console.log('Files received:', Object.keys(req.files || {}));
-            
-            // Check which required fields are missing
-            const requiredFields = [
-                'user_id',
-                'timestamp',
-                'type',
-                'status',
-                // Add all other required fields here
-            ];
-            
-            const missingFields = requiredFields.filter(field => !req.body[field]);
-            if (missingFields.length > 0) {
-                console.log('MISSING FIELDS:', missingFields);
-            } else {
-                console.log('All required fields are present');
-            }
-            
-            // Check for required files
-            const requiredFiles = ['right_eye', 'left_eye', 'ai_right', 'ai_left'];
-            const files = req.files as { [fieldname: string]: Express.Multer.File[] };
-            const missingFiles = requiredFiles.filter(file => !files || !files[file]);
-            
-            if (missingFiles.length > 0) {
-                console.log('MISSING FILES:', missingFiles);
-            } else {
-                console.log('All required files are present');
-            }
-            
-            console.log('==== END DEBUG ====\n');
-        }
-
         
-        const { user_id, line_right, line_left, va_right, va_left, near_description, 
-                ai_right_image_base64, ai_left_image_base64, description, 
-                pic_description, pic_left_description, pic_right_description } = req.body;
+        const { user_id, line_right, line_left, va_right, va_left, near_description } = req.body;
         
         const files = req.files as { [fieldname: string]: Express.Multer.File[] } | undefined;
         
@@ -198,23 +159,7 @@ export const savescanlog = async (req: Request, res: Response): Promise<void> =>
                 });
                 return;
             }
-        } else if (ai_right_image_base64 && ai_left_image_base64) {
-            ai_analysis = {
-                description: description,
-                pic_description: pic_description,
-                pic_left_description: pic_left_description,
-                pic_right_description: pic_right_description,
-                ai_right_image_base64: ai_right_image_base64,
-                ai_left_image_base64: ai_left_image_base64
-            };
-        } else {
-            res.status(400).send({
-                success: false,
-                message: "Missing required photos or AI analysis."
-            });
-            return;
         }
-
         //Process AI analysis
         let aiRightBuffer, aiLeftBuffer, leftBuffer, rightBuffer;
         
@@ -236,10 +181,10 @@ export const savescanlog = async (req: Request, res: Response): Promise<void> =>
         }
 
         //Validate AI analysis
-        const aiDescription = ai_analysis.description || description;
-        const ai_Pic_Description = ai_analysis.pic_description || pic_description;
-        const ai_Pic_Left = ai_analysis.pic_left_description || pic_left_description;
-        const ai_Pic_Right = ai_analysis.pic_right_description || pic_right_description;
+        const aiDescription = ai_analysis.description;
+        const ai_Pic_Description = ai_analysis.pic_description;
+        const ai_Pic_Left = ai_analysis.pic_left_description;
+        const ai_Pic_Right = ai_analysis.pic_right_description;
 
         //Handle missing AI analysis
         if (!user_id || !aiDescription || 
