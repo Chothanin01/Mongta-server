@@ -3,8 +3,8 @@ import cors from "cors";
 import { Server } from "socket.io";
 import { chathistory, chatlog, createchat, sendchat } from "./controller/ChatController";
 import { getfile, uploadmiddleware, uploadtest } from "./controller/FirebaseController";
-import { facebookregister, googleregister, register } from "./controller/RegisterController";
-import { facebooklogin, googlelogin, login } from "./controller/LoginController";
+import { googleregister, register } from "./controller/RegisterController";
+import { googlelogin, login } from "./controller/LoginController";
 import { middleware } from "./controller/MiddlewareController";
 import { OTP_email, OTP_phone } from "./controller/OTPController";
 
@@ -43,9 +43,7 @@ app.get("/api/geturl" , middleware, getfile)
 app.post("/api/register", register)
 app.post("/api/login", login)
 app.post("/api/googlelogin", googlelogin)
-app.post("/api/facebooklogin", facebooklogin)
 app.post("/api/googleregister", googleregister)
-app.post("/api/facebookregister", facebookregister)
 app.post("/api/otp/mail", OTP_email)
 app.post("/api/otp/phone", OTP_phone)
 
