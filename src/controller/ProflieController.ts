@@ -222,118 +222,6 @@ export const forgetPassword = async (req: AuthRequest,res: Response) => {
     }
 }
 
-export const changeprofilepicture = async (req: AuthRequest,res: Response) => {
-    try {
-        const authheader = req.headers.authorization
-
-        //Handle token not found
-        if (!authheader) {
-            res.status(400).send({
-                success: false,
-                message: "Token not found."
-            })
-            return
-        } 
-
-        //Get token
-        const token = authheader && authheader.split(" ")[1];
-
-        //Handle wrong token
-        if (!token) {
-            res.status(400).send({
-              success: false,
-              message: "Invalid token format.",
-            });
-            return
-          }
-        
-        //Decode token
-        const decode:any = jwt.verify(token, process.env.JWT_SECRET as string);
-
-        const new_profile_picture = req.file
-        
-        if (!new_profile_picture) {
-            res.status(400).json({
-                success: false,
-                message: "Missing required inputs.",
-            })
-            return
-        }
-
-        const uploadFile = () => {
-            return new Promise<string>((resolve, reject) => {
-                const filename = `profile/${decode.user_id}/${Date.now()}-${req.file!.originalname}`
-                const file = bucket.file(filename)
-                const stream = file.createWriteStream({
-                    metadata: { contentType: req.file!.mimetype },
-                    resumable: false
-                });
-
-                stream.on('error', (err) => {
-                    reject(err);
-                });
-
-                stream.on('finish', async () => {
-                    try {
-                        //Make the file public
-                        await file.makePublic();
-                        
-                        //Get the public URL
-                        const fileurl = `https://firebasestorage.googleapis.com/v0/b/${bucket.name}/o/${encodeURIComponent(filename)}?alt=media`;
-                        resolve(fileurl);
-                    } catch (err) {
-                        reject(err);
-                    }
-                });
-
-                stream.end(req.file!.buffer);
-            });
-        };
-        //Upload new profile picture
-        const profile_picture = await uploadFile()
-        if (!profile_picture) {
-            res.status(400).json({
-                success: false,
-                message: "Upload new profile picture failed."
-            })
-        }
-
-        const old_profile_picture = await prismadb.user.findUnique({
-            where: { id: Number(decode.user_id) },
-            select: {
-                profile_picture: true
-            }
-        })
-        //Delete old profile picture
-        if (old_profile_picture?.profile_picture != null && old_profile_picture?.profile_picture != "https://firebasestorage.googleapis.com/v0/b/mongta-66831.firebasestorage.app/o/profile%2Fprofile.jpg?alt=media&token=2925bbc2-209b-4c3a-af4f-1af990f4be42" && old_profile_picture?.profile_picture != "https://firebasestorage.googleapis.com/v0/b/mongta-66831.firebasestorage.app/o/profile.jpg?alt=media&token=43c03659-4c2f-4212-8393-3238eacc403d") {
-            const old_file = bucket.file(old_profile_picture.profile_picture)
-            await old_file.delete()
-        }
-
-        //Update profile picture
-        await prismadb.user.update({
-            where: { id: Number(decode.user_id) },
-            data: {
-                profile_picture
-            }
-        })
-
-        //Response success
-        res.status(200).send({
-            success: true,
-            message: "Profile picture changed successfully."
-        })
-    } catch (error) {
-        //Response Error
-         console.log(error);
-         res.status(500).json({
-             error,
-             success: false,
-             message: "An error occurred."
-         })
-     }
-}
-
 export const updateuser = async (req: AuthRequest,res: Response) => {
     try {
         const authheader = req.headers.authorization
@@ -379,8 +267,18 @@ export const updateuser = async (req: AuthRequest,res: Response) => {
 
         const { first_name, last_name, email } = req.body;
 
+        const new_profile_picture = req.file
+
         //Handle missing inputs
         if (!first_name || !last_name || !email) {
+            res.status(400).json({
+                success: false,
+                message: "Missing required inputs.",
+            })
+            return
+        }
+        //Handle missing file
+        if (!new_profile_picture) {
             res.status(400).json({
                 success: false,
                 message: "Missing required inputs.",
@@ -405,13 +303,74 @@ export const updateuser = async (req: AuthRequest,res: Response) => {
             return
         }
 
+        const uploadFile = () => {
+            return new Promise<string>((resolve, reject) => {
+                const filename = `profile/${decode.user_id}/${Date.now()}-${req.file!.originalname}`
+                const file = bucket.file(filename)
+                const stream = file.createWriteStream({
+                    metadata: { contentType: req.file!.mimetype },
+                    resumable: false
+                });
+
+                stream.on('error', (err) => {
+                    reject(err);
+                });
+
+                stream.on('finish', async () => {
+                    try {
+                        //Make the file public
+                        await file.makePublic();
+                        
+                        //Get the public URL
+                        const fileurl = `https://firebasestorage.googleapis.com/v0/b/${bucket.name}/o/${encodeURIComponent(filename)}?alt=media`;
+                        resolve(fileurl);
+                    } catch (err) {
+                        reject(err);
+                    }
+                });
+
+                stream.end(req.file!.buffer);
+            });
+        };
+        //Upload new profile picture
+        const profile_picture = await uploadFile()
+        if (!profile_picture) {
+            res.status(400).json({
+                success: false,
+                message: "Upload new profile picture failed."
+            })
+        }
+        const old_profile_picture = await prismadb.user.findUnique({
+            where: { id: Number(decode.user_id) },
+            select: {
+                profile_picture: true
+            }
+        })
+        //Delete old profile picture
+        if (old_profile_picture?.profile_picture != null && old_profile_picture?.profile_picture != "https://firebasestorage.googleapis.com/v0/b/mongta-66831.firebasestorage.app/o/profile%2Fprofile.jpg?alt=media&token=2925bbc2-209b-4c3a-af4f-1af990f4be42" && old_profile_picture?.profile_picture != "https://firebasestorage.googleapis.com/v0/b/mongta-66831.firebasestorage.app/o/profile.jpg?alt=media&token=43c03659-4c2f-4212-8393-3238eacc403d") {
+            const oldFilePath = old_profile_picture.profile_picture
+            .replace("https://firebasestorage.googleapis.com/v0/b/mongta-66831.firebasestorage.app/o/", "")
+            .split("?")[0];
+
+            const decodedFilePath = decodeURIComponent(oldFilePath);
+
+            const old_file = bucket.file(decodedFilePath);
+            await old_file.delete().catch(err => {
+                console.error("Error deleting old profile picture:", err);
+            });
+        }
+
         //Update user
         await prismadb.user.update({
             where: { id: Number(decode.user_id) },
             data: {
                 first_name,
                 last_name,
-                email
+                email: {
+                    email: email,
+                    is_verified: false
+                },
+                profile_picture
             }
         })
 

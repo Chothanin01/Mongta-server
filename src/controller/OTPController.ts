@@ -31,6 +31,23 @@ export const OTP_email = async (req: Request, res: Response) => {
         //Send OTP to email
         const mail = await sendMail(email, "OTP Verification", `<h1>Your OTP for verification is ${otp_code}<br>Ref: ${otp_ref}</h1>`)
 
+        const verify_email = {
+            email: email,
+            is_verified: true,
+        }
+        //Verify if OTP is sent successfully
+        await prismadb.user.updateMany({
+            where: {
+                email: {
+                    path: ["email"],
+                    equals: email,
+                }
+            },
+            data: {
+                email:verify_email
+            }
+        })
+
         //Response Success
         res.status(200).send({
             Ref: otp_ref,
