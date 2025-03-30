@@ -11,7 +11,7 @@ import { googlelogin, login } from "./controller/LoginController";
 import { middleware } from "./controller/MiddlewareController";
 import { OTP_email, OTP } from "./controller/OTPController";
 import { nearchart } from "./controller/NearChartController";
-import { changePassword, forgetPassword, getuser, updateuser } from "./controller/ProflieController";
+import { changePassword, forgetPassword, getuser, updateuser, usernotification, ophthnotification } from "./controller/ProflieController";
 
 const app = express();
 app.use(cors());
@@ -65,6 +65,8 @@ app.get("/api/getuser", middleware, getuser)
 app.post("/api/changepassword", middleware, changePassword)
 app.post("/api/forgetpassword", forgetPassword)
 app.post("/api/updateuser", uploadmiddleware, middleware, updateuser)
+app.get("/api/usernoti", middleware, usernotification)
+app.get("/api/ophtnoti", middleware, ophthnotification)
 
 //Declare socket.io
 export const io = new Server({

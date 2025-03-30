@@ -379,8 +379,225 @@ export const updateuser = async (req: AuthRequest,res: Response) => {
             success: true,
             message: "User info updated successfully."
         })
-
         
+    } catch (error) {
+        //Response Error
+        console.log(error);
+        res.status(500).json({
+            error,
+            success: false,
+            message: "An error occurred."
+        })
+    }
+}
+
+export const usernotification = async (req: AuthRequest,res: Response) => {
+    try {
+        const authheader = req.headers.authorization
+
+        //Handle token not found
+        if (!authheader) {
+            res.status(400).send({
+                success: false,
+                message: "Token not found."
+            })
+            return
+        } 
+
+        //Get token
+        const token = authheader && authheader.split(" ")[1];
+
+        //Handle wrong token
+        if (!token) {
+            res.status(400).send({
+              success: false,
+              message: "Invalid token format.",
+            });
+            return
+          }
+        
+        //Decode token
+        const decode:any = jwt.verify(token, process.env.JWT_SECRET as string);
+
+        //Find user in database
+        const user = await prismadb.user.findUnique({
+            where: { id: Number(decode.user_id) },
+            select: {
+                id: true,
+            }
+        })
+        if (!user) {
+            res.status(401).json({ 
+                success: false, 
+                message: 'User not found' 
+            });
+            return
+        }
+
+        const scan_count = await prismadb.scan.count({
+            where: {
+                user_id: Number(decode.user_id),
+            }
+        })
+
+        const chat = await prismadb.conversation.findMany({
+            where: { user_id: Number(decode.user_id) },
+            select: {
+                id: true
+            }
+        })
+
+        const chat_noti = await prismadb.chat.findMany({
+            where: { conversation_id: {
+                in: chat.map((item) => item.id)
+            },
+            AND: { 
+                sender_id: {not: Number(decode.user_id)
+            }}},
+            orderBy: {
+                timestamp: "desc"
+            },
+            select: {
+                User: {
+                    select: {
+                        first_name: true
+                    }
+                }
+            }
+        })
+
+        const scan = await prismadb.scan.findFirst({
+            where: { user_id: Number(decode.user_id) },
+            orderBy: {
+                date: "desc"
+            },
+            select: {
+                id: true,
+                date: true,
+                va: true,
+                photo: true
+            },
+            take: 1
+        })
+        if (!scan) {
+            res.status(200).send({
+                scan_count,
+                chat_count: chat.length,
+                chat_noti,
+                scan,
+                success: true,
+                message: "User notification have been sent successfully."
+            })
+            return
+        }
+
+        const va = typeof scan.va === "string" ? JSON.parse(scan.va) : scan.va;
+        const va_status = va.description.includes("ผิดปกติ") ? "เสี่ยง" : "ปกติ";
+        const eye = typeof scan.photo === "string" ? JSON.parse(scan.photo) : scan.va;
+        const eye_status = eye.description.includes("ผิดปกติ") ? "เสี่ยง" : "ปกติ";
+
+        //Response success
+        res.status(200).send({
+            scan_count,
+            chat_count: chat.length,
+            chat_noti,
+            scan: {
+                id: scan.id,
+                date: scan.date,
+                va: va_status,
+                eye: eye_status
+            },
+            success: true,
+            message: "User notification have been sent successfully."
+        })
+    } catch (error) {
+        //Response Error
+        console.log(error);
+        res.status(500).json({
+            error,
+            success: false,
+            message: "An error occurred."
+        })
+    }
+}
+
+export const ophthnotification = async (req: AuthRequest,res: Response) => {
+    try {
+        const authheader = req.headers.authorization
+
+        //Handle token not found
+        if (!authheader) {
+            res.status(400).send({
+                success: false,
+                message: "Token not found."
+            })
+            return
+        } 
+
+        //Get token
+        const token = authheader && authheader.split(" ")[1];
+
+        //Handle wrong token
+        if (!token) {
+            res.status(400).send({
+              success: false,
+              message: "Invalid token format.",
+            });
+            return
+          }
+        
+        //Decode token
+        const decode:any = jwt.verify(token, process.env.JWT_SECRET as string);
+
+        //Find user in database
+        const user = await prismadb.user.findUnique({
+            where: { id: Number(decode.user_id) },
+            select: {
+                id: true,
+                is_opthamologist: true
+            }
+        })
+        if (!user || user.is_opthamologist === false) {
+            res.status(401).json({ 
+                success: false, 
+                message: 'User not found' 
+            });
+            return
+        }
+
+        const chat = await prismadb.conversation.findMany({
+            where: { ophthalmologist_id: Number(decode.user_id) },
+            select: {
+                id: true
+            }
+        })
+
+        const chat_noti = await prismadb.chat.findMany({
+            where: { conversation_id: {
+                in: chat.map((item) => item.id)
+            },
+            AND: { 
+                sender_id: {not: Number(decode.user_id)
+            }}},
+            orderBy: {
+                timestamp: "desc"
+            },
+            select: {
+                User: {
+                    select: {
+                        first_name: true
+                    }
+                }
+            }
+        })
+
+        //Response success
+        res.status(200).send({
+            chat_count: chat.length,
+            chat_noti,
+            success: true,
+            message: "Ophthalmologist notification have been sent successfully."
+        })
     } catch (error) {
         //Response Error
         console.log(error);
