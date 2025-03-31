@@ -107,8 +107,6 @@ export const findophth = async (req: Request, res: Response) =>  {
     }
 }
 
-const upload = multer({ storage: multer.memoryStorage() });
-
 export const sendchat = async (req:Request, res:Response) => {
     try {
         let { conversation_id, sender_id, message} = req.body

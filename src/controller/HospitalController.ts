@@ -82,5 +82,3 @@ export const getNearbyHospitals = async (req: Request, res: Response): Promise<v
     })
   }
 };
-
-

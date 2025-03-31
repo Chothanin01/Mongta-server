@@ -458,9 +458,11 @@ export const usernotification = async (req: AuthRequest,res: Response) => {
             where: { conversation_id: {
                 in: chat.map((item) => item.id)
             },
-            AND: { 
-                sender_id: {not: Number(decode.user_id)
-            }}},
+            AND:[ { 
+                sender_id: {not: Number(decode.user_id)}
+            },{
+                status: 'delivered'
+            }],},
             orderBy: {
                 timestamp: "desc"
             },
@@ -567,7 +569,7 @@ export const ophthnotification = async (req: AuthRequest,res: Response) => {
         if (!user || user.is_opthamologist === false) {
             res.status(401).json({ 
                 success: false, 
-                message: 'User not found' 
+                message: 'User not found or User is not ophthamologist.' 
             });
             return
         }
@@ -583,9 +585,12 @@ export const ophthnotification = async (req: AuthRequest,res: Response) => {
             where: { conversation_id: {
                 in: chat.map((item) => item.id)
             },
-            AND: { 
-                sender_id: {not: Number(decode.user_id)
-            }}},
+            AND: [{ 
+                sender_id: {not: Number(decode.user_id)}
+            }, {
+                status: 'delivered'
+            }
+        ]},
             orderBy: {
                 timestamp: "desc"
             },
