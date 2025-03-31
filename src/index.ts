@@ -2,19 +2,15 @@ import express, { Request, Response } from "express";
 import cors from "cors";
 import { Server } from "socket.io";
 import { chathistory, chatlog, findophth, sendchat } from "./controller/ChatController";
-import { facebookregister, googleregister, register } from "./controller/RegisterController";
+import { googleregister, register } from "./controller/RegisterController";
 import { googlelogin, login } from "./controller/LoginController";
-import { middleware } from "./controller/MiddlewareController";
+import { getuser, middleware } from "./controller/MiddlewareController";
 import { nearchart } from "./controller/NearChartController";
 import { getNearbyHospitals } from './controller/HospitalController';
 import { ophtha_scanlog, savescanlog, scanlog } from "./controller/ScanLogController";
 import { searchHospitals } from './controller/HospitalSearch';
 import { multipleupload, uploadmiddleware } from "./controller/FirebaseController";
-import { googleregister, register } from "./controller/RegisterController";
-import { googlelogin, login } from "./controller/LoginController";
-import { middleware } from "./controller/MiddlewareController";
 import { OTP_email, OTP_phone } from "./controller/OTPController";
-import { nearchart } from "./controller/NearChartController";
 
 const app = express();
 app.use(cors());
@@ -61,6 +57,10 @@ app.post("/api/otp/phone", OTP_phone)
 app.get('/nearby-hospitals', getNearbyHospitals);
 app.get('/search-hospitals', searchHospitals);
 app.post("/api/nearchart", nearchart)
+app.get("/api/scanlog/:user_id" , scanlog)
+app.post("/api/savescanlog", multipleupload, savescanlog)
+app.get("/api/scanlog/ophtha/:conversation_id", ophtha_scanlog)
+app.get("/api/getuser", middleware, getuser)
 
 //Declare socket.io
 export const io = new Server({
