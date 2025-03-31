@@ -4,9 +4,9 @@ import { bucket } from "../util/firebase";
 import { generatescanid } from "../util/id";
 import FormData from 'form-data';
 import fetch from 'node-fetch';
+import { uploadfile } from "../util/firebase";
 
 const DEBUG_SCAN_UPLOADS = true;
-
 
 export const scanlog = async (req: Request,res: Response) => {
     try {
@@ -99,8 +99,7 @@ export const ophtha_scanlog = async (req: Request, res:Response) => {
 }
 
 export const savescanlog = async (req: Request, res: Response): Promise<void> => {
-    try {
-        
+    try { 
         const { user_id, line_right, line_left, va_right, va_left, near_description } = req.body;
         
         const files = req.files as { [fieldname: string]: Express.Multer.File[] } | undefined;
@@ -202,70 +201,30 @@ export const savescanlog = async (req: Request, res: Response): Promise<void> =>
 
         //Initialize URLs object
         const urls: Record<string, string> = {};
+
+        //Generate timestamp
+        const timestamp = Date.now();
+        
         //Upload AI right eye image
         if (aiRightBuffer) {
-            const timestamp = Date.now();
             const fileName = `scanlog/${user_id}/${id}/${timestamp}_ai_right.jpg`;
-            const fileUpload = bucket.file(fileName);
-            
-            await new Promise<void>((resolve, reject) => {
-                const stream = fileUpload.createWriteStream({
-                    metadata: {
-                        contentType: 'image/jpeg',
-                        metadata: {
-                            originalName: 'ai_right.jpg',
-                            uploadedAt: timestamp
-                        }
-                    },
-                    resumable: false
-                });
-                
-                stream.on('error', (error) => {
-                    reject(error);
-                });
-                
-                stream.on('finish', async () => {
-                    await fileUpload.makePublic();
-                    const publicUrl = `https://firebasestorage.googleapis.com/v0/b/${bucket.name}/o/${encodeURIComponent(fileName)}?alt=media`;
-                    urls['ai_right'] = publicUrl;
-                    resolve();
-                });
-                
-                stream.end(aiRightBuffer);
-            });
+            try {
+                const publicUrl = await uploadfile(aiRightBuffer, 'image/jpeg', fileName);
+                urls['ai_right'] = publicUrl;
+            } catch (error) {
+                console.error("File upload failed:", error);
+            }
         }
         
         //Upload AI left eye image
         if (aiLeftBuffer) {
-            const timestamp = Date.now();
             const fileName = `scanlog/${user_id}/${id}/${timestamp}_ai_left.jpg`;
-            const fileUpload = bucket.file(fileName);
-            
-            await new Promise<void>((resolve, reject) => {
-                const stream = fileUpload.createWriteStream({
-                    metadata: {
-                        contentType: 'image/jpeg',
-                        metadata: {
-                            originalName: 'ai_left.jpg',
-                            uploadedAt: timestamp
-                        }
-                    },
-                    resumable: false
-                });
-                
-                stream.on('error', (error) => {
-                    reject(error);
-                });
-                
-                stream.on('finish', async () => {
-                    await fileUpload.makePublic();
-                    const publicUrl = `https://firebasestorage.googleapis.com/v0/b/${bucket.name}/o/${encodeURIComponent(fileName)}?alt=media`;
-                    urls['ai_left'] = publicUrl;
-                    resolve();
-                });
-                
-                stream.end(aiLeftBuffer);
-            });
+            try {
+                const publicUrl = await uploadfile(aiLeftBuffer, 'image/jpeg', fileName);
+                urls['ai_left'] = publicUrl;
+            } catch (error) {
+                console.error("File upload failed:", error);
+            }
         }
         
         //Upload user-uploaded files
@@ -273,42 +232,22 @@ export const savescanlog = async (req: Request, res: Response): Promise<void> =>
             for (const fieldName of Object.keys(files)) {
                 if (files[fieldName] && files[fieldName].length > 0) {
                     const file = files[fieldName][0];
-                    const timestamp = Date.now();
                     const fileName = `scanlog/${user_id}/${id}/${timestamp}_${file.originalname}`;
-                    const fileUpload = bucket.file(fileName);
                     
-                    // Upload file
-                    await new Promise<void>((resolve, reject) => {
-                        const stream = fileUpload.createWriteStream({
-                            metadata: {
-                                contentType: file.mimetype,
-                                metadata: {
-                                    originalName: file.originalname,
-                                    uploadedAt: timestamp
-                                }
-                            },
-                            resumable: false
-                        });
-                        
-                        stream.on('error', (error) => {
-                            reject(error);
-                        });
-                        
-                        stream.on('finish', async () => {
-                            await fileUpload.makePublic();
-                            const publicUrl = `https://firebasestorage.googleapis.com/v0/b/${bucket.name}/o/${encodeURIComponent(fileName)}?alt=media`;
-                            urls[fieldName] = publicUrl;
-                            resolve();
-                        });
-                        
-                        stream.end(file.buffer);
-                    });
+                    try {
+                        const publicUrl = await uploadfile(file.buffer, file.mimetype, fileName);
+                        urls[fieldName] = publicUrl;
+                    } catch (error) {
+                        console.error("File upload failed:", error);
+                    }
                 }
             }
         }
-
+        
         //Generate date
-        const date = new Date();
+        const now = new Date()
+        const timeZoneOffset = 7 * 60
+        const date = new Date(now.getTime() + timeZoneOffset * 60000)
 
         //Check for all required URLs
         if (!urls.ai_right || !urls.ai_left) {

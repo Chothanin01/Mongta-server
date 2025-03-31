@@ -1,17 +1,17 @@
 import express, { Request, Response } from "express";
 import cors from "cors";
 import { Server } from "socket.io";
-import { chathistory, chatlog, findophth, sendchat } from "./controller/ChatController";
-import { middleware } from "./controller/MiddlewareController";
-import { nearchart } from "./controller/NearChartController";
-import { getNearbyHospitals } from './controller/HospitalController';
-import { ophtha_scanlog, savescanlog, scanlog } from "./controller/ScanLogController";
-import { searchHospitals } from './controller/HospitalSearch';
-import { multipleupload, uploadmiddleware } from "./controller/FirebaseController";
 import { googleregister, register } from "./controller/RegisterController";
 import { googlelogin, login } from "./controller/LoginController";
-import { OTP_email, OTP } from "./controller/OTPController";
+import { middleware, signout } from "./controller/MiddlewareController";
+import { multipleupload, uploadmiddleware } from "./controller/FirebaseController";
+import { chathistory, chatlog, findophth, sendchat } from "./controller/ChatController";
+import { nearchart } from "./controller/NearChartController";
+import { getNearbyHospitals } from './controller/HospitalController';
+import { searchHospitals } from './controller/HospitalSearch';
+import { ophtha_scanlog, savescanlog, scanlog } from "./controller/ScanLogController";
 import { changePassword, forgetPassword, getuser, updateuser, usernotification, ophthnotification } from "./controller/ProflieController";
+import { OTP_email, OTP } from "./controller/OTPController";
 
 const app = express();
 app.use(cors());
@@ -41,26 +41,38 @@ const appServer = app.listen(PORT , () => {
 app.use(express.json({ limit: "50mb" }));
 app.use(express.urlencoded({ extended: true, limit: "50mb" }));
 
-app.get("/nearby-hospitals", getNearbyHospitals)
-app.get("/api/scanlog/:user_id" , scanlog)
-app.post("/api/savescanlog", multipleupload, savescanlog)
-app.get("/api/scanlog/ophtha/:conversation_id", ophtha_scanlog)
-app.post("/api/createchat", middleware, findophth)
-app.post("/api/sendchat", uploadmiddleware, middleware, sendchat)
-app.get("/api/chat/:conversation_id/:user_id", middleware, chatlog)
-app.get("/api/chathistory/:user_id", middleware, chathistory)
+//API routes
+
+//Authentication routes
 app.post("/api/register", register)
 app.post("/api/login", login)
 app.post("/api/googlelogin", googlelogin)
 app.post("/api/googleregister", googleregister)
+app.post("/api/signout", middleware, signout)
+
+//Chat routes
+app.post("/api/findophth", middleware, findophth)
+app.post("/api/sendchat", uploadmiddleware, middleware, sendchat)
+app.get("/api/chat/:conversation_id/:user_id", middleware, chatlog)
+app.get("/api/chathistory/:user_id", middleware, chathistory)
+
+//Hospital routes
+app.get('/nearby-hospitals', middleware, getNearbyHospitals);
+app.get('/search-hospitals', middleware, searchHospitals);
+
+//Scanlog routes
+app.get("/api/scanlog/:user_id", middleware, scanlog)
+app.post("/api/savescanlog", multipleupload, middleware, savescanlog)
+app.get("/api/scanlog/ophtha/:conversation_id", middleware, ophtha_scanlog)
+
+//OTP routes
 app.post("/api/otp/mail", OTP_email)
 app.post("/api/otp", OTP)
-app.get('/nearby-hospitals', getNearbyHospitals);
-app.get('/search-hospitals', searchHospitals);
-app.post("/api/nearchart", nearchart)
-app.get("/api/scanlog/:user_id" , scanlog)
-app.post("/api/savescanlog", multipleupload, savescanlog)
-app.get("/api/scanlog/ophtha/:conversation_id", ophtha_scanlog)
+
+//NearChart routes
+app.post("/api/nearchart", middleware, nearchart)
+
+//Profile routes
 app.get("/api/getuser", middleware, getuser)
 app.post("/api/changepassword", middleware, changePassword)
 app.post("/api/forgetpassword", forgetPassword)

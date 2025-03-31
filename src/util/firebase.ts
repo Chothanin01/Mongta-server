@@ -14,4 +14,33 @@ admin.initializeApp({
 const auth = admin.auth()
 const bucket = admin.storage().bucket();
 
-export { bucket, auth };
+const uploadfile = (fileBuffer: Buffer, fileMimeType: string, destinationPath: string): Promise<string> => {
+  return new Promise<string>((resolve, reject) => {
+      const file = bucket.file(destinationPath);
+      const stream = file.createWriteStream({
+          metadata: { contentType: fileMimeType },
+          resumable: false
+      });
+
+      stream.on('error', (err) => {
+          reject(err);
+      });
+
+      stream.on('finish', async () => {
+          try {
+              // Make the file public
+              await file.makePublic();
+              
+              // Get the public URL
+              const fileUrl = `https://firebasestorage.googleapis.com/v0/b/${bucket.name}/o/${encodeURIComponent(destinationPath)}?alt=media`;
+              resolve(fileUrl);
+          } catch (err) {
+              reject(err);
+          }
+      });
+
+      stream.end(fileBuffer);
+  });
+};
+
+export { bucket, auth, uploadfile };

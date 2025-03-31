@@ -49,6 +49,13 @@ export const login = async (req: Request, res: Response) => {
             process.env.JWT_SECRET as string,
             { expiresIn: "7d" }
         );
+        //Update user status to 'online'
+        await prismadb.user.update({
+            where: { id: user.id },
+            data: {
+                status: 'online'
+            }
+        })
 
         res.status(200).send({
             user: {
@@ -114,6 +121,13 @@ export const googlelogin = async (req: Request,res: Response) => {
         //Already register
         if (user) {
             const token = await auth.createCustomToken(payload.sub)
+            //Update user status to 'online'
+            await prismadb.user.update({
+                where: { id: user.id },
+                data: {
+                    status: 'online'
+                }
+            })
             res.status(200).send({
                 isRegister: true,
                 token,
@@ -143,3 +157,5 @@ export const googlelogin = async (req: Request,res: Response) => {
         })
     }
 }
+
+

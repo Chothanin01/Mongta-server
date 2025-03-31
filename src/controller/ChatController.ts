@@ -4,6 +4,7 @@ import { io } from '../index'
 import { bucket } from "../util/firebase";
 import multer from "multer";
 import { generatechatid } from "../util/id";
+import { uploadfile } from "../util/firebase";
 
 export const findophth = async (req: Request, res: Response) =>  {
     try {
@@ -41,7 +42,6 @@ export const findophth = async (req: Request, res: Response) =>  {
         })
         
         const exist_chat = check_chat.map((chat) => chat.ophthalmologist_id)
-
         
         const ophth_condition:any = {
             is_opthamologist: true,
@@ -157,43 +157,15 @@ export const sendchat = async (req:Request, res:Response) => {
         const timestamp = new Date(now.getTime() + timeZoneOffset * 60000)
         
         let send = {}
+
         if (req.file) {
-
-            //Convert the stream operations to a Promise
-            const uploadFile = () => {
-                return new Promise<string>((resolve, reject) => {
-                    const filename = `chat/${conversation_id}/${Date.now()}-${req.file!.originalname}`
-                    const file = bucket.file(filename)
-                    const stream = file.createWriteStream({
-                        metadata: { contentType: req.file!.mimetype },
-                        resumable: false
-                    });
-
-                    stream.on('error', (err) => {
-                        reject(err);
-                    });
-
-                    stream.on('finish', async () => {
-                        try {
-                            //Make the file public
-                            await file.makePublic();
-                            
-                            //Get the public URL
-                            const fileurl = `https://firebasestorage.googleapis.com/v0/b/${bucket.name}/o/${encodeURIComponent(filename)}?alt=media`;
-                            resolve(fileurl);
-                        } catch (err) {
-                            reject(err);
-                        }
-                    });
-
-                    stream.end(req.file!.buffer);
-                });
-            };
-
             try {
-                //Wait for file upload
-                const fileurl = await uploadFile();
-                
+                const filename = `chat/${conversation_id}/${Date.now()}-${req.file!.originalname}`
+                const fileBuffer = req.file.buffer;
+                const fileMimeType = req.file.mimetype;
+
+                const fileurl = await uploadfile(fileBuffer, fileMimeType, filename);
+
                 //Save message with file URL
                 send = await prismadb.chat.create({
                     data: {
@@ -204,25 +176,26 @@ export const sendchat = async (req:Request, res:Response) => {
                         chat: fileurl,
                     }
                 });
-            } catch (err) {
+            } catch (error) {
+                //Handle error when uploading image
                 res.status(500).json({
                     success: false,
                     message: 'Failed to upload the image.'
                 });
                 return
             }
-    } else {
-        //Save message
-        send = await prismadb.chat.create({
-            data: {
-                sender_id,
-                conversation_id,
-                status: 'delivered',
-                timestamp,
-                chat: message
-            }
-        })
-    }
+        } else {
+            //Save message
+            send = await prismadb.chat.create({
+                data: {
+                    sender_id,
+                    conversation_id,
+                    status: 'delivered',
+                    timestamp,
+                    chat: message
+                }
+            })
+        }
 
         //Send message
         io.to(conversation_id).emit('newMessage', {

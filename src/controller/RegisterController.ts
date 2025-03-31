@@ -192,7 +192,6 @@ export const googleregister = async (req: Request,res: Response) => {
                 profile_picture: "https://firebasestorage.googleapis.com/v0/b/mongta-66831.firebasestorage.app/o/profile.jpg?alt=media&token=43c03659-4c2f-4212-8393-3238eacc403d"
             }
         })
-        
 
         //Response success
         res.status(201).json({

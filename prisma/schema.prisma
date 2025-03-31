@@ -33,7 +33,7 @@ model Scan {
   description String?  @db.VarChar(255)
   va          Json?
   photo       Json?
-  date        DateTime @db.Date
+  date        DateTime @default(now()) @db.Timestamp(6)
   User        User?    @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 }
 

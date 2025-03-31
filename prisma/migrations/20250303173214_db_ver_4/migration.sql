@@ -6,8 +6,8 @@
 
 */
 -- AlterTable
-ALTER TABLE "Scan" DROP COLUMN "datetime",
-ADD COLUMN     "date" DATE NOT NULL;
+ALTER TABLE "Scan" DROP COLUMN "date",
+ADD COLUMN     "datetime" TIMESTAMP(6) NOT NULL;
 
 -- CreateTable
 CREATE TABLE "OTP" (

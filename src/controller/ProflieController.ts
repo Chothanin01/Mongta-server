@@ -3,7 +3,7 @@ import { prismadb } from "../util/db";
 import jwt from "jsonwebtoken";
 import { AuthRequest } from "./MiddlewareController";
 import { comparePassword, hashPassword } from "../util/bcrypt";
-import { bucket } from "../util/firebase";
+import { bucket, uploadfile } from "../util/firebase";
 
 export const getuser = async (req: AuthRequest,res: Response) => {
     try {
@@ -332,8 +332,14 @@ export const updateuser = async (req: AuthRequest,res: Response) => {
                 stream.end(req.file!.buffer);
             });
         };
+        
+        const filemime = new_profile_picture.mimetype
+        const filebuffer = new_profile_picture.buffer
+        const filename = `profile/${decode.user_id}/${Date.now()}-${new_profile_picture!.originalname}`
+        
         //Upload new profile picture
-        const profile_picture = await uploadFile()
+        const profile_picture = await uploadfile(filebuffer, filemime, filename)
+        
         if (!profile_picture) {
             res.status(400).json({
                 success: false,
@@ -361,7 +367,7 @@ export const updateuser = async (req: AuthRequest,res: Response) => {
         }
 
         //Update user
-        await prismadb.user.update({
+        const update_user = await prismadb.user.update({
             where: { id: Number(decode.user_id) },
             data: {
                 first_name,
@@ -370,12 +376,13 @@ export const updateuser = async (req: AuthRequest,res: Response) => {
                     email: email,
                     is_verified: false
                 },
-                profile_picture
+                profile_picture,
             }
         })
 
         //Response success
         res.status(200).send({
+            update_user,
             success: true,
             message: "User info updated successfully."
         })
