@@ -179,7 +179,7 @@ export const sendchat = async (req:Request, res:Response) => {
                             await file.makePublic();
                             
                             //Get the public URL
-                            const fileurl = `https://storage.googleapis.com/${bucket.name}/${filename}`;
+                            const fileurl = `https://firebasestorage.googleapis.com/v0/b/${bucket.name}/o/${encodeURIComponent(filename)}?alt=media`;
                             resolve(fileurl);
                         } catch (err) {
                             reject(err);

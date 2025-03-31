@@ -42,7 +42,10 @@ export const login = async (req: Request, res: Response) => {
         }
 
         const token = jwt.sign(
-            { user_id: user.id },
+            { 
+                user_id: user.id, 
+                role: user.is_opthamologist ? "ophthalmologist" : "user",
+            },
             process.env.JWT_SECRET as string,
             { expiresIn: "7d" }
         );

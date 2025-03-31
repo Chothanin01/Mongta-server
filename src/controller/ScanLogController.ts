@@ -226,7 +226,7 @@ export const savescanlog = async (req: Request, res: Response): Promise<void> =>
                 
                 stream.on('finish', async () => {
                     await fileUpload.makePublic();
-                    const publicUrl = `https://storage.googleapis.com/${bucket.name}/${fileName}`;
+                    const publicUrl = `https://firebasestorage.googleapis.com/v0/b/${bucket.name}/o/${encodeURIComponent(fileName)}?alt=media`;
                     urls['ai_right'] = publicUrl;
                     resolve();
                 });
@@ -259,7 +259,7 @@ export const savescanlog = async (req: Request, res: Response): Promise<void> =>
                 
                 stream.on('finish', async () => {
                     await fileUpload.makePublic();
-                    const publicUrl = `https://storage.googleapis.com/${bucket.name}/${fileName}`;
+                    const publicUrl = `https://firebasestorage.googleapis.com/v0/b/${bucket.name}/o/${encodeURIComponent(fileName)}?alt=media`;
                     urls['ai_left'] = publicUrl;
                     resolve();
                 });
@@ -296,7 +296,7 @@ export const savescanlog = async (req: Request, res: Response): Promise<void> =>
                         
                         stream.on('finish', async () => {
                             await fileUpload.makePublic();
-                            const publicUrl = `https://storage.googleapis.com/${bucket.name}/${fileName}`;
+                            const publicUrl = `https://firebasestorage.googleapis.com/v0/b/${bucket.name}/o/${encodeURIComponent(fileName)}?alt=media`;
                             urls[fieldName] = publicUrl;
                             resolve();
                         });

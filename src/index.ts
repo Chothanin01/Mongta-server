@@ -2,15 +2,16 @@ import express, { Request, Response } from "express";
 import cors from "cors";
 import { Server } from "socket.io";
 import { chathistory, chatlog, findophth, sendchat } from "./controller/ChatController";
-import { googleregister, register } from "./controller/RegisterController";
-import { googlelogin, login } from "./controller/LoginController";
-import { getuser, middleware } from "./controller/MiddlewareController";
+import { middleware } from "./controller/MiddlewareController";
 import { nearchart } from "./controller/NearChartController";
 import { getNearbyHospitals } from './controller/HospitalController';
 import { ophtha_scanlog, savescanlog, scanlog } from "./controller/ScanLogController";
 import { searchHospitals } from './controller/HospitalSearch';
 import { multipleupload, uploadmiddleware } from "./controller/FirebaseController";
-import { OTP_email, OTP_phone } from "./controller/OTPController";
+import { googleregister, register } from "./controller/RegisterController";
+import { googlelogin, login } from "./controller/LoginController";
+import { OTP_email, OTP } from "./controller/OTPController";
+import { changePassword, forgetPassword, getuser, updateuser, usernotification, ophthnotification } from "./controller/ProflieController";
 
 const app = express();
 app.use(cors());
@@ -53,7 +54,7 @@ app.post("/api/login", login)
 app.post("/api/googlelogin", googlelogin)
 app.post("/api/googleregister", googleregister)
 app.post("/api/otp/mail", OTP_email)
-app.post("/api/otp/phone", OTP_phone)
+app.post("/api/otp", OTP)
 app.get('/nearby-hospitals', getNearbyHospitals);
 app.get('/search-hospitals', searchHospitals);
 app.post("/api/nearchart", nearchart)
@@ -61,6 +62,11 @@ app.get("/api/scanlog/:user_id" , scanlog)
 app.post("/api/savescanlog", multipleupload, savescanlog)
 app.get("/api/scanlog/ophtha/:conversation_id", ophtha_scanlog)
 app.get("/api/getuser", middleware, getuser)
+app.post("/api/changepassword", middleware, changePassword)
+app.post("/api/forgetpassword", forgetPassword)
+app.post("/api/updateuser", uploadmiddleware, middleware, updateuser)
+app.get("/api/usernoti", middleware, usernotification)
+app.get("/api/ophtnoti", middleware, ophthnotification)
 
 //Declare socket.io
 export const io = new Server({
