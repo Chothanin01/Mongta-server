@@ -12,6 +12,7 @@ import { searchHospitals } from './controller/HospitalSearch';
 import { ophtha_scanlog, savescanlog, scanlog } from "./controller/ScanLogController";
 import { changePassword, forgetPassword, getuser, updateuser, usernotification, ophthnotification } from "./controller/ProflieController";
 import { OTP_email, OTP } from "./controller/OTPController";
+import { offline, online } from "./controller/StatusController";
 
 const app = express();
 app.use(cors());
@@ -79,6 +80,10 @@ app.post("/api/forgetpassword", forgetPassword)
 app.post("/api/updateuser", uploadmiddleware, middleware, updateuser)
 app.get("/api/usernoti", middleware, usernotification)
 app.get("/api/ophtnoti", middleware, ophthnotification)
+
+//Status routes
+app.post("/api/online", middleware, online)
+app.post("/api/offline", middleware, offline)
 
 //Declare socket.io
 export const io = new Server({

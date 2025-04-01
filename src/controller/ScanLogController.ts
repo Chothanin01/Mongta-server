@@ -24,7 +24,12 @@ export const scanlog = async (req: Request,res: Response) => {
         }
         //Find user scan log
         const scanlog = await prismadb.scan.findMany({
-            where: { user_id: parseInt(user_id) }
+            where: { 
+                user_id: parseInt(user_id)
+            },
+            orderBy: {
+                date: 'desc'
+            }
         })
         if (scanlog.length == 0) {
             res.status(200).send({
@@ -46,7 +51,7 @@ export const scanlog = async (req: Request,res: Response) => {
         res.status(400).json({
             error,
             success: false,
-            message: "An unexpected error occurred while fetching the chat log."
+            message: "An unexpected error occurred while fetching the scan log."
         })
     }
 }
@@ -61,19 +66,37 @@ export const ophtha_scanlog = async (req: Request, res:Response) => {
                 user_id: true
             }
         })
-        if (!conversation) {
+        if (!conversation || !conversation.user_id) {
             res.status(400).send({
                 success: false,
                 message: "Conversation did not exist."
             })
             return
         }
+        //Find user
+        const user = await prismadb.user.findUnique({
+            where: { id:conversation.user_id },
+            select: {
+                id: true,
+                username: true,
+                first_name: true,
+                last_name: true,
+                email: true,
+                phone: true,
+                profile_picture: true,
+                is_opthamologist: true,
+                sex: true,
+                date_of_birth: true
+            }
+        })
+
         //Find user scan log
         const scanlog = await prismadb.scan.findMany({
             where: { user_id:conversation.user_id }
         })
         if (scanlog.length == 0) {
             res.status(200).send({
+                user,
                 scanlog,
                 success: true,
                 message: "User haven't have any scan log yet."
@@ -82,6 +105,7 @@ export const ophtha_scanlog = async (req: Request, res:Response) => {
         }
         //Response success
         res.status(200).send({
+            user,
             scanlog,
             success: true,
             message: "Scan log have been sent to ophthamologist successfully."
@@ -93,7 +117,7 @@ export const ophtha_scanlog = async (req: Request, res:Response) => {
         res.status(400).json({
             error,
             success: false,
-            message: "An unexpected error occurred while fetching the chat log."
+            message: "An unexpected error occurred while fetching the scan log."
         })
     }
 }

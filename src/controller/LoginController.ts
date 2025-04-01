@@ -1,7 +1,6 @@
 import { Request, Response } from "express";
 import { prismadb } from "../util/db";
 import { comparePassword } from "../util/bcrypt";
-import { auth } from "../util/firebase";
 import { client } from "../util/OAUTH";
 import jwt from "jsonwebtoken";
 
@@ -120,7 +119,16 @@ export const googlelogin = async (req: Request,res: Response) => {
         })
         //Already register
         if (user) {
-            const token = await auth.createCustomToken(payload.sub)
+            //Create token
+            const token = jwt.sign(
+                { 
+                    user_id: user.id, 
+                    role: user.is_opthamologist ? "ophthalmologist" : "user",
+                },
+                process.env.JWT_SECRET as string,
+                { expiresIn: "7d" }
+            );
+
             //Update user status to 'online'
             await prismadb.user.update({
                 where: { id: user.id },

@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { auth } from "../util/firebase";
+import { client } from "../util/OAUTH"
 import { hashPassword } from "../util/bcrypt";
 import { prismadb } from "../util/db";
 import { generateuserid } from "../util/id";
@@ -124,9 +124,23 @@ export const googleregister = async (req: Request,res: Response) => {
             return
         }
         //Decode token
-        const decodedToken = await auth.verifyIdToken(id_token);
-        const email = decodedToken.email
-        const picture = decodedToken.picture
+        const ticket = await client.verifyIdToken({
+            idToken: id_token,
+            audience: process.env.GOOGLE_CLIENT_ID_ANDRIOD,
+        });
+
+        const payload = ticket.getPayload();
+
+        if (!payload || !payload.email || !payload.picture) {
+            res.status(400).json({ 
+                success: false, 
+                message: "Invalid token." 
+            });
+            return
+        }
+        
+        const email = payload.email
+        const picture = payload.picture
         if (!email || !picture) {
             res.status(400).json({
                 success: false,

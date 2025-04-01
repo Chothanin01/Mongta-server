@@ -120,3 +120,4 @@ export const signout = async (req: AuthRequest, res: Response) => {
         });
     }
 };
+

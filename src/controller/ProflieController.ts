@@ -43,7 +43,10 @@ export const getuser = async (req: AuthRequest,res: Response) => {
                 last_name: true,
                 email: true,
                 phone: true,
-                profile_picture: true
+                profile_picture: true,
+                is_opthamologist: true,
+                sex: true,
+                date_of_birth: true
             }
         });
 
@@ -302,36 +305,6 @@ export const updateuser = async (req: AuthRequest,res: Response) => {
             })
             return
         }
-
-        const uploadFile = () => {
-            return new Promise<string>((resolve, reject) => {
-                const filename = `profile/${decode.user_id}/${Date.now()}-${req.file!.originalname}`
-                const file = bucket.file(filename)
-                const stream = file.createWriteStream({
-                    metadata: { contentType: req.file!.mimetype },
-                    resumable: false
-                });
-
-                stream.on('error', (err) => {
-                    reject(err);
-                });
-
-                stream.on('finish', async () => {
-                    try {
-                        //Make the file public
-                        await file.makePublic();
-                        
-                        //Get the public URL
-                        const fileurl = `https://firebasestorage.googleapis.com/v0/b/${bucket.name}/o/${encodeURIComponent(filename)}?alt=media`;
-                        resolve(fileurl);
-                    } catch (err) {
-                        reject(err);
-                    }
-                });
-
-                stream.end(req.file!.buffer);
-            });
-        };
         
         const filemime = new_profile_picture.mimetype
         const filebuffer = new_profile_picture.buffer
