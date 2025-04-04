@@ -268,12 +268,12 @@ export const updateuser = async (req: AuthRequest,res: Response) => {
             return
         }
 
-        const { first_name, last_name, email } = req.body;
+        const { username, first_name, last_name } = req.body;
 
         const new_profile_picture = req.file
 
         //Handle missing inputs
-        if (!first_name || !last_name || !email) {
+        if (!first_name || !last_name || !username) {
             res.status(400).json({
                 success: false,
                 message: "Missing required inputs.",
@@ -285,23 +285,6 @@ export const updateuser = async (req: AuthRequest,res: Response) => {
             res.status(400).json({
                 success: false,
                 message: "Missing required inputs.",
-            })
-            return
-        }
-
-        const check_email = await prismadb.user.findFirst({
-            where: { email: {
-                path: ['email'],
-                equals: email
-            } },
-            select: {
-                id: true
-            }
-        })
-        if (check_email && check_email.id !== Number(decode.user_id)) {
-            res.status(400).json({
-                success: false,
-                message: "Email already exists."
             })
             return
         }
@@ -339,16 +322,30 @@ export const updateuser = async (req: AuthRequest,res: Response) => {
             });
         }
 
+        //Check username
+        const check_username = await prismadb.user.findFirst({
+            where: { username: username },
+            select: {
+                id: true,
+                username: true
+            }
+        })
+
+        if (check_username && check_username.id !== Number(decode.user_id)) {
+            res.status(400).json({
+                success: false,
+                message: "Username already exists."
+            })
+            return
+        }
+
         //Update user
         const update_user = await prismadb.user.update({
             where: { id: Number(decode.user_id) },
             data: {
                 first_name,
                 last_name,
-                email: {
-                    email: email,
-                    is_verified: false
-                },
+                username,
                 profile_picture,
             }
         })
