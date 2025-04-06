@@ -92,17 +92,22 @@ export const io = new Server({
   }
 })
 
-//Connect socket.io
-io.on('connection', (socket) => {
+const setupSocketEvents = (io: Server) => {
+  io.on('connection', (socket) => {
+    console.log('A user connected');
 
-  socket.on('join', (conversation_id: string, user_id: string) => {
+    //Join a room based on conversation_id
+    socket.on('join', (conversation_id: string, user_id: string) => {
       socket.join(conversation_id);
       console.log(`${user_id} joined room: ${conversation_id}`);
-      
       socket.to(conversation_id).emit('User joined', { user_id });
+    });
 
-      socket.on('sendMessage', (messageData: { sender_id: string, message: string }) => {
-          socket.to(conversation_id).emit('newMessage', messageData);
-      });
+    //Handle user disconnecting
+    socket.on('disconnect', () => {
+      console.log('A user disconnected');
+    });
   });
-});
+};
+
+setupSocketEvents(io);
