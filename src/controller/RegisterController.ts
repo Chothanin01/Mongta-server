@@ -113,7 +113,7 @@ export const register = async(req: Request,res: Response) => {
 
 export const googleregister = async (req: Request,res: Response) => {
     try {
-        const { id_token, phonenumber, first_name, last_name, sex, dob } = req.body;
+        const { id_token, phonenumber, first_name, last_name, sex, dob, profile_picture } = req.body;
         
         //Handle missing inputs
         if (!id_token || !phonenumber || !first_name || !last_name || !sex || !dob) {
@@ -123,10 +123,10 @@ export const googleregister = async (req: Request,res: Response) => {
             })
             return
         }
-        //Decode token
+
         const ticket = await client.verifyIdToken({
             idToken: id_token,
-            audience: process.env.GOOGLE_CLIENT_ID_ANDRIOD,
+            audience: process.env.GOOGLE_CLIENT_ID_ANDROID_AUDIENCE
         });
 
         const payload = ticket.getPayload();
@@ -203,7 +203,7 @@ export const googleregister = async (req: Request,res: Response) => {
                 status: 'offline',
                 phone: phonejson,
                 email: emailjson,
-                profile_picture: "https://firebasestorage.googleapis.com/v0/b/mongta-66831.firebasestorage.app/o/profile.jpg?alt=media&token=43c03659-4c2f-4212-8393-3238eacc403d"
+                profile_picture: profile_picture || "https://firebasestorage.googleapis.com/v0/b/mongta-66831.firebasestorage.app/o/profile.jpg?alt=media&token=43c03659-4c2f-4212-8393-3238eacc403d"
             }
         })
 
