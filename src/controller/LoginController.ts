@@ -79,10 +79,9 @@ export const login = async (req: Request, res: Response) => {
 
 export const googlelogin = async (req: Request,res: Response) => {
     try {
-        const { idtoken } = req.body
-
-        // inspect received idtoken
-        console.log('Received Google ID Token:', idtoken);
+        const { idtoken } = req.body;
+        console.log('Received Google ID Token:', idtoken?.substring(0, 20) + '...');
+        console.log('Using client ID:', process.env.GOOGLE_CLIENT_ID_ANDRIOD);
 
         //Handle missing inputs
         if (!idtoken) {
@@ -93,76 +92,85 @@ export const googlelogin = async (req: Request,res: Response) => {
             return
         }
 
-        //Verify the Google token
-        const ticket = await client.verifyIdToken({
-            idToken: idtoken,
-            audience: process.env.GOOGLE_CLIENT_ID_ANDRIOD
-        })
+        //Verify the Google token with more detailed error logging
+        try {
 
-        const payload = ticket.getPayload();
-        if (!payload || !payload.email) {
+            const ticket = await client.verifyIdToken({
+                idToken: idtoken,
+                audience: process.env.GOOGLE_CLIENT_ID_ANDROID_AUDIENCE
+            });
+
+            const payload = ticket.getPayload();
+            if (!payload || !payload.email) {
+                res.status(400).json({
+                    success: false,
+                    message: "Invalid token payload."
+                });
+                return
+            }
+
+            //Find user
+            const user = await prismadb.user.findFirst({
+                where: {
+                    email: {
+                        path: ["email"],
+                        equals: payload.email
+                    }
+                }
+            })
+            //Already register
+            if (user) {
+                //Create token
+                const token = jwt.sign(
+                    { 
+                        user_id: user.id, 
+                        role: user.is_opthamologist ? "ophthalmologist" : "user",
+                    },
+                    process.env.JWT_SECRET as string,
+                    { expiresIn: "7d" }
+                );
+
+                //Update user status to 'online'
+                await prismadb.user.update({
+                    where: { id: user.id },
+                    data: {
+                        status: 'online'
+                    }
+                })
+                res.status(200).send({
+                    isRegister: true,
+                    token,
+                    user,
+                    success: true,
+                    message: "Login with google success." 
+                })
+                return
+            }
+            //Not register
+            res.status(200).send({
+                isRegister: false,
+                google: {
+                    email: payload.email,
+                    picture: payload.picture,
+                    sub: payload.sub
+                },
+                idtoken
+            })
+        } catch (verifyError) {
+            console.error('Google token verification failed:', verifyError);
             res.status(400).json({
                 success: false,
-                message: "Invalid token payload."
+                message: "Google token verification failed",
             });
-            return
+            return;
         }
-
-        //Find user
-        const user = await prismadb.user.findFirst({
-            where: {
-                email: {
-                    path: ["email"],
-                    equals: payload.email
-                }
-            }
-        })
-        //Already register
-        if (user) {
-            //Create token
-            const token = jwt.sign(
-                { 
-                    user_id: user.id, 
-                    role: user.is_opthamologist ? "ophthalmologist" : "user",
-                },
-                process.env.JWT_SECRET as string,
-                { expiresIn: "7d" }
-            );
-
-            //Update user status to 'online'
-            await prismadb.user.update({
-                where: { id: user.id },
-                data: {
-                    status: 'online'
-                }
-            })
-            res.status(200).send({
-                isRegister: true,
-                token,
-                user,
-                success: true,
-                message: "Login with google success." 
-            })
-            return
-        }
-        //Not register
-        res.status(200).send({
-            isRegister: false,
-            google: {
-                email: payload.email,
-                picture: payload.picture,
-                sub: payload.sub
-            },
-            idtoken
-        })
     } catch (error) {
-        //Response Error
-        console.log(error);
+        console.error('Google login error:', error);
         res.status(500).json({
             error,
             success: false,
             message: "An error occurred."
-        })
+        });
     }
 }
 
