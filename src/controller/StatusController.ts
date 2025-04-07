@@ -3,6 +3,8 @@ import { AuthRequest } from "./MiddlewareController";
 import { prismadb } from "../util/db";
 import jwt from "jsonwebtoken"
 
+const userStatusTimers = new Map<number, NodeJS.Timeout>();
+
 export const online = async (req: AuthRequest, res:Response ) => {
     try {
         const authheader = req.headers.authorization
@@ -45,18 +47,26 @@ export const online = async (req: AuthRequest, res:Response ) => {
             })
         }
 
+        const userId = Number(decode.user_id);
+        
+        if (userStatusTimers.has(userId)) {
+            clearTimeout(userStatusTimers.get(userId)!);
+            userStatusTimers.delete(userId);
+        }
+
         await prismadb.user.update({
-            where: { id: Number(decode.user_id )},
+            where: { id: userId },
             data: {
                 status: 'online'
+                // Don't try to update updated_at here
             }
-        })
+        });
 
         //Response Success
         res.status(200).send({
             success: true,
-            message: "User have been online."
-        })
+            message: "User is now online."
+        });
 
     } catch (error) {
         //Response Error
@@ -65,7 +75,7 @@ export const online = async (req: AuthRequest, res:Response ) => {
             error,
             success: false,
             message: "An error occurred."
-        })
+        });
     }
 }
 

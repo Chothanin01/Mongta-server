@@ -1,5 +1,6 @@
 import express, { Request, Response } from "express";
 import cors from "cors";
+import { prismadb } from "./util/db";
 import { Server } from "socket.io";
 import { googleregister, register } from "./controller/RegisterController";
 import { googlelogin, login } from "./controller/LoginController";
@@ -86,23 +87,66 @@ app.post("/api/online", middleware, online)
 app.post("/api/offline", middleware, offline)
 
 //Declare socket.io
-export const io = new Server({
+export const io = new Server(appServer, {
   cors: {
-      origin: "http://localhost:3000"
-  }
-})
+    origin: "*",
+    methods: ["GET", "POST"],
+    credentials: true
+  },
+  transports: ['websocket', 'polling']
+});
 
 //Connect socket.io
 io.on('connection', (socket) => {
-
-  socket.on('join', (conversation_id: string, user_id: string) => {
-      socket.join(conversation_id);
-      console.log(`${user_id} joined room: ${conversation_id}`);
+  // Get user ID from headers rather than query to be more reliable
+  const userId = socket.handshake.headers.userid || 
+                socket.handshake.query.userId;
+                
+  console.log(`User ${userId} connected via socket`);
+  
+  // Handle status changes
+  socket.on('status_change', async (data) => {
+    try {
+      console.log(`User ${userId} status changed to ${data.status}`);
       
-      socket.to(conversation_id).emit('User joined', { user_id });
-
-      socket.on('sendMessage', (messageData: { sender_id: string, message: string }) => {
-          socket.to(conversation_id).emit('newMessage', messageData);
+      if (userId && data.status) {
+        await prismadb.user.update({
+          where: { id: Number(userId) },
+          data: { status: data.status }
+        });
+        
+        // Broadcast to all other connected clients
+        socket.broadcast.emit('user_status_changed', {
+          userId: userId,
+          status: data.status
+        });
+      }
+    } catch (error) {
+      console.error('Error updating user status:', error);
+    }
+  });
+  
+  socket.on('disconnect', async () => {
+    console.log(`User ${userId} disconnected`);
+    
+    try {
+      await prismadb.user.update({
+        where: { id: Number(userId) },
+        data: { status: 'offline' }
       });
+    } catch (error) {
+      console.error('Error updating user status on disconnect:', error);
+    }
+  });
+  
+  socket.on('join', (data) => {
+    const { conversationId, userId } = data;
+    socket.join(conversationId);
+    console.log(`${userId} joined room: ${conversationId}`);
+    socket.to(conversationId).emit('User joined', { user_id: userId });
+
+    socket.on('sendMessage', (messageData: { sender_id: string, message: string }) => {
+        socket.to(conversationId).emit('newMessage', messageData);
+    });
   });
 });
