@@ -96,57 +96,22 @@ export const io = new Server(appServer, {
   transports: ['websocket', 'polling']
 });
 
-//Connect socket.io
-io.on('connection', (socket) => {
-  // Get user ID from headers rather than query to be more reliable
-  const userId = socket.handshake.headers.userid || 
-                socket.handshake.query.userId;
-                
-  console.log(`User ${userId} connected via socket`);
-  
-  // Handle status changes
-  socket.on('status_change', async (data) => {
-    try {
-      console.log(`User ${userId} status changed to ${data.status}`);
-      
-      if (userId && data.status) {
-        await prismadb.user.update({
-          where: { id: Number(userId) },
-          data: { status: data.status }
-        });
-        
-        // Broadcast to all other connected clients
-        socket.broadcast.emit('user_status_changed', {
-          userId: userId,
-          status: data.status
-        });
-      }
-    } catch (error) {
-      console.error('Error updating user status:', error);
-    }
-  });
-  
-  socket.on('disconnect', async () => {
-    console.log(`User ${userId} disconnected`);
-    
-    try {
-      await prismadb.user.update({
-        where: { id: Number(userId) },
-        data: { status: 'offline' }
-      });
-    } catch (error) {
-      console.error('Error updating user status on disconnect:', error);
-    }
-  });
-  
-  socket.on('join', (data) => {
-    const { conversationId, userId } = data;
-    socket.join(conversationId);
-    console.log(`${userId} joined room: ${conversationId}`);
-    socket.to(conversationId).emit('User joined', { user_id: userId });
+const setupSocketEvents = (io: Server) => {
+  io.on('connection', (socket) => {
+    console.log('A user connected');
 
-    socket.on('sendMessage', (messageData: { sender_id: string, message: string }) => {
-        socket.to(conversationId).emit('newMessage', messageData);
+    //Join a room based on conversation_id
+    socket.on('join', (conversation_id: string, user_id: string) => {
+      socket.join(conversation_id);
+      console.log(`${user_id} joined room: ${conversation_id}`);
+      socket.to(conversation_id).emit('User joined', { user_id });
+    });
+
+    //Handle user disconnecting
+    socket.on('disconnect', () => {
+      console.log('A user disconnected');
     });
   });
-});
+};
+
+setupSocketEvents(io);

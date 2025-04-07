@@ -84,6 +84,12 @@ export const findophth = async (req: Request, res: Response) =>  {
             }
         })
 
+        io.emit('joinRoom', { 
+            conversation_id: create.id, 
+            user_id, 
+            ophthalmologist_id: opht.id 
+        });
+
         //Send message that chat is create
         io.emit('newChat', { user_id, ophth: opht.id, conversation_id: create.id });
         
@@ -141,7 +147,7 @@ export const sendchat = async (req:Request, res:Response) => {
         })
         if (check_chat?.ophthalmologist_id !== sender_id && check_chat?.user_id !== sender_id) {
             res.status(404).send({
-                succuess: false,
+                success: false,
                 message: "You are not authorized to send in this chat."
             })
             return
@@ -152,57 +158,48 @@ export const sendchat = async (req:Request, res:Response) => {
         const timeZoneOffset = 7 * 60
         const timestamp = new Date(now.getTime() + timeZoneOffset * 60000)
         
-        let send = {}
+        let content:string
 
         if (req.file) {
             try {
-                const filename = `chat/${conversation_id}/${Date.now()}-${req.file!.originalname}`
+                const filename = `chat/${conversation_id}/${Date.now()}-${req.file.originalname}`;
                 const fileBuffer = req.file.buffer;
                 const fileMimeType = req.file.mimetype;
 
-                const fileurl = await uploadfile(fileBuffer, fileMimeType, filename);
-
-                //Save message with file URL
-                send = await prismadb.chat.create({
-                    data: {
-                        sender_id,
-                        conversation_id,
-                        status: 'delivered',
-                        timestamp,
-                        chat: fileurl,
-                    }
-                });
+                content = await uploadfile(fileBuffer, fileMimeType, filename);
             } catch (error) {
-                //Handle error when uploading image
                 res.status(500).json({
                     success: false,
-                    message: 'Failed to upload the image.'
+                    message: "Failed to upload the image.",
                 });
                 return
             }
         } else {
-            //Save message
-            send = await prismadb.chat.create({
-                data: {
-                    sender_id,
-                    conversation_id,
-                    status: 'delivered',
-                    timestamp,
-                    chat: message
-                }
-            })
+            content = message;
         }
+
+        // Save message to database
+        const chatMessage = await prismadb.chat.create({
+            data: {
+                sender_id,
+                conversation_id,
+                status: "delivered",
+                timestamp,
+                chat: content,
+            },
+        });
 
         //Send message
         io.to(conversation_id).emit('newMessage', {
             sender_id,
-            message,
+            message: content,
             timestamp,
+            conversation_id
         });
 
         //Response success
         res.status(201).send({
-            send,
+            chatMessage,
             success: true,
             message: "Message sent successfully."
         })
@@ -231,6 +228,17 @@ export const chatlog = async (req:Request, res:Response) => {
             res.status(404).json({
                 success: false,
                 message: "Chat did not exist."
+            })
+            return
+        }
+
+        const check_user = await prismadb.conversation.findUnique({
+            where: { id:parseInt(conversation_id) }
+        })
+        if (check_user?.user_id !== parseInt(user_id) && check_user?.ophthalmologist_id !== parseInt(user_id)) {
+            res.status(404).json({
+                success: false,
+                message: "You are not authorized to view this chat."
             })
             return
         }
