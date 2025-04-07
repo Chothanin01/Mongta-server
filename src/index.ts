@@ -101,10 +101,17 @@ const setupSocketEvents = (io: Server) => {
     console.log('A user connected');
 
     //Join a room based on conversation_id
-    socket.on('join', (conversation_id: string, user_id: string) => {
-      socket.join(conversation_id);
-      console.log(`${user_id} joined room: ${conversation_id}`);
-      socket.to(conversation_id).emit('User joined', { user_id });
+    socket.on('join', (data) => {
+      // Extract parameters from the object
+      const conversationId = data.conversationId;
+      const userId = data.userId;
+      
+      // Join the room
+      socket.join(conversationId);
+      console.log(`${userId} joined room: ${conversationId}`);
+      
+      // Notify others in the room
+      socket.to(conversationId).emit('User joined', { userId });
     });
 
     //Handle user disconnecting
