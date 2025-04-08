@@ -339,30 +339,6 @@ export const chathistory = async (req:Request, res:Response) => {
     try {
         const { user_id } = req.params
 
-        //Declare type ChatHistory
-        type Chathistory = {
-            id: number
-            chat: string
-            conversation_id: number
-            timestamp: Date
-            status: string
-            sender_id: number
-            Conversation: {
-                User_Conversation_user_idToUser?: {
-                    first_name: string;
-                    last_name: string;
-                    profile_picture: string;
-                } | null
-                User_Conversation_ophthalmologist_idToUser?: {
-                    first_name: string;
-                    last_name: string;
-                    profile_picture: string;
-                } | null
-            }
-        }
-        
-        let chathistory: Chathistory[] = []
-
         //Get user info
         const user = await prismadb.user.findFirst({
             where: {
@@ -377,134 +353,64 @@ export const chathistory = async (req:Request, res:Response) => {
             }
         })
 
-        //Check user role 
-        if ( user?.is_opthamologist ) {
-            //Find all chat
-            const conversation = await prismadb.conversation.findMany({
-                where: {
-                    ophthalmologist_id: parseInt(user_id)
+        const conversations = await prismadb.conversation.findMany({
+            where: user?.is_opthamologist
+                ? { ophthalmologist_id: parseInt(user_id) }
+                : { user_id: parseInt(user_id) },
+            include: {
+                User_Conversation_user_idToUser: {
+                    select: { first_name: true, last_name: true, profile_picture: true }
                 },
-                select: {
-                    id: true
-                }
-            }) 
-            const chatid = conversation.map((conversation) => conversation.id)
-
-            //Get all chat 
-            chathistory = await prismadb.chat.findMany({
-                where: {
-                    conversation_id: {
-                        in: chatid
-                    }
+                User_Conversation_ophthalmologist_idToUser: {
+                    select: { first_name: true, last_name: true, profile_picture: true }
                 },
-                select: {
-                    id: true,
-                    chat: true,
-                    conversation_id: true,
-                    timestamp: true,
-                    status:true,
-                    sender_id:true,
-                    Conversation: {
-                        select: {
-                            User_Conversation_user_idToUser: {
-                                select: {
-                                    first_name: true,
-                                    last_name: true,
-                                    profile_picture: true,
-                                }
-                            }
-                        }
-                    }
-                },
-                orderBy: {
-                    timestamp: 'desc'
-                }
-            })
-        } else {
-            //Find all chat
-            const conversation = await prismadb.conversation.findMany({
-                where: {
-                    user_id: parseInt(user_id)
-                },
-                select: {
-                    id: true
-                }
-            }) 
-            const chatid = conversation.map((conversation) => conversation.id)
-
-            //Get all chat
-            chathistory = await prismadb.chat.findMany({
-                where: {
-                    conversation_id: {
-                        in: chatid
-                    }
-                },
-                select: {
-                    id: true,
-                    chat: true,
-                    conversation_id: true,
-                    timestamp: true,
-                    status:true,
-                    sender_id:true,
-                    Conversation: {
-                        select: {
-                            User_Conversation_ophthalmologist_idToUser: {
-                                select: {
-                                    first_name: true,
-                                    last_name: true,
-                                    profile_picture: true,
-                                }
-                            }
-                        }
-                    }
-                },
-                orderBy: {
-                    timestamp: 'desc'
-                }
-            })
-        }
-
-        //Handle no chat history
-        if (chathistory.length === 0) {
-                res.status(200).send({
-                    success: true,
-                    message: "Not have any Chat history yet."
-                })
-                return
             }
-
-        //Get latest message
-        const latest_chat = Object.values(
-            chathistory.reduce((acc, chat) => {
-                if (!acc[chat.conversation_id] || acc[chat.conversation_id].timestamp < chat.timestamp) {
-                    acc[chat.conversation_id] = chat
-                }
-                return acc
-            }, {} as Record<number, typeof chathistory[0]>)
-        )
-
-        //Count not read message 
-        const chat_check = latest_chat.map((latestchat) => {
-            const chat_count = chathistory.filter(
-                (chat) =>
-                    chat.conversation_id === latestchat.conversation_id &&
-                    chat.status === "delivered" &&
-                    chat.sender_id !== parseInt(user_id)
-            ).length
-
-            return {
-                ...latestchat,
-                notread: chat_count 
-            };
         });
 
-        //Sort chat history by timestamp
-        chat_check.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
+        const conversation_ids = conversations.map(conv => conv.id);
+        const chats = await prismadb.chat.findMany({
+        where: {
+            conversation_id: { in: conversation_ids }
+        },
+        orderBy: {
+            timestamp: 'desc'
+        }
+        });
+
+        const chats_byconversation = chats.reduce((acc, chat) => {
+            if (!acc[chat.conversation_id]) acc[chat.conversation_id] = [];
+            acc[chat.conversation_id].push(chat);
+            return acc;
+        }, {} as Record<number, typeof chats>);
+
+        const chatHistory = conversations.map((conv) => {
+            const chatList = chats_byconversation[conv.id] || [];
+            const latestChat = chatList[0];
+        
+            return {
+                id: latestChat?.id || null,
+                conversation_id: conv.id,
+                chat: latestChat?.chat || '',
+                timestamp: latestChat?.timestamp || null,
+                status: latestChat?.status || '',
+                sender_id: latestChat?.sender_id || null,
+                notread: chatList.filter(c => c.status === 'delivered' && c.sender_id !== parseInt(user_id)).length,
+                profile: user?.is_opthamologist
+                    ? conv.User_Conversation_user_idToUser
+                    : conv.User_Conversation_ophthalmologist_idToUser
+            };
+        });
+        
+        chatHistory.sort((a, b) => {
+            const aTime = a.timestamp ? new Date(a.timestamp).getTime() : 0;
+            const bTime = b.timestamp ? new Date(b.timestamp).getTime() : 0;
+            return aTime - bTime;
+        });
 
         //Response success
         res.status(200).send({
             user,
-            latest_chat: chat_check,
+            latest_chat: chatHistory,
             success: true,
             message: "Chat history sent successfully.",
         })
